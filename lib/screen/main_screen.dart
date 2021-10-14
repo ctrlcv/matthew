@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:hive/hive.dart';
 import 'package:matthew/dialog/font_set_dialog.dart';
+import 'package:matthew/models/bookmark_model.dart';
 import 'package:matthew/utils/settings.dart';
 
 import '../constants/constants.dart';
 import '../models/line_info.dart';
 import '../models/matthew_data.dart';
 import '../swipe_detector.dart';
+import 'bookmark_screen.dart';
 import 'contents_screen.dart';
 import 'data_initialization.dart';
 import 'header_pages.dart';
@@ -25,6 +27,8 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   Settings _settings = Settings();
   HeaderPage _headerPage = HeaderPage();
+
+  List<List<LineInfo>> _lineInfoList = [];
 
   List<LineInfo> _lineInfoHeader = [];
   List<LineInfo> _lineInfoChapter1 = [];
@@ -246,6 +250,23 @@ class _MainScreenState extends State<MainScreen> {
           _strongDicPageCounter
     ];
 
+    _lineInfoList = [
+      _lineInfoHeader,
+      _lineInfoChapter1,
+      _lineInfoChapter2,
+      _lineInfoChapter3,
+      _lineInfoChapter4,
+      _lineInfoChapter5,
+      _lineInfoChapter6,
+      _lineInfoChapter7,
+      _lineInfoChapter8,
+      _lineInfoChapter9,
+      _lineInfoChapter10,
+      _lineInfoChapter11,
+      _lineInfoChapter12,
+      _lineInfoStrongDic,
+    ];
+
     print(_pageIndex);
     _pageController = PageController(initialPage: 0);
   }
@@ -344,15 +365,80 @@ class _MainScreenState extends State<MainScreen> {
     if (_showMenuTimer.isActive) {
       _showMenuTimer.cancel();
     }
+
+    if (mounted) {
+      setState(() {});
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BookMarkScreen(
+          onClickPage: (value) {
+            print("onClickPage $value");
+            _pageController.animateToPage(
+              value,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeOut,
+            );
+            if (mounted) {
+              setState(() {});
+            }
+          },
+          bookMarks: getBookMarkList(),
+        ),
+      ),
+    );
+  }
+
+  List<BookMark> getBookMarkList() {
+    List<BookMark> result = [];
+
+    List<int> bookmarks = Hive.box('matthew').get('setBookMark') ?? [];
+
+    for (int i = 0; i < bookmarks.length; i++) {
+      result.add(
+        BookMark(
+          paragraph: bookmarks[i],
+          pageNo: getPageNoByParagraph(bookmarks[i]),
+          paragraphStr: getParagraphStrByNumber(bookmarks[i]),
+        ),
+      );
+    }
+
+    return result;
+  }
+
+  String getParagraphStrByNumber(int paragraph) {
+    String result = "";
+    int chapterNo = getChapterNoByParagraph(paragraph);
+    int chapterIndex = kStartParagraph[chapterNo - 1];
+    print('chapterNo : $chapterNo, chapterIndex $chapterIndex');
+    List<LineInfo> lineInfo = _lineInfoList[chapterNo];
+
+    for (int i = 0; i < lineInfo.length; i++) {
+      if (lineInfo[i].paragraph + chapterIndex < paragraph) {
+        continue;
+      } else if (lineInfo[i].paragraph + chapterIndex > paragraph) {
+        break;
+      }
+
+      result = result + lineInfo[i].lineText;
+    }
+
+    print(result);
+    return result;
   }
 
   void _onClickMenuContent() {
-    print('onClickMenuContent()');
-
     _showMenu = false;
 
     if (_showMenuTimer.isActive) {
       _showMenuTimer.cancel();
+    }
+
+    if (mounted) {
+      setState(() {});
     }
 
     Navigator.push(
@@ -473,9 +559,6 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget buildControlPanel() {
     if (_currentPageNo > 3 + _headerPageCounter && _currentPageNo < _totalHeaderCounter - 1) {
-      // print('buildControlPanel() return _currentPageNo $_currentPageNo');
-      // print('buildControlPanel() return 3 + _headerPageCounter ${(3 + _headerPageCounter)}');
-      // print('buildControlPanel() return _totalHeaderCounter - 1 ${(_totalHeaderCounter - 1)}');
       return Container();
     }
 
@@ -666,7 +749,7 @@ class _MainScreenState extends State<MainScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               getBottomMenuItem("목차", 'icon_content', _onClickMenuContent),
-              getBottomMenuItem("북마크", 'icon_bookmark', _onClickMenuSetBookMark),
+              getBottomMenuItem("북마크", 'icon_bookmark', _onClickMenuViewBookMark),
               getBottomMenuItem("폰트", 'icon_fontset', _onClickMenuSetFont),
               getBottomMenuItem("스크롤", 'icon_scroll', _onClickMenuSetScroll),
               getBottomMenuItem("PDF", 'icon_pdf', _onClickMenuPdf),
@@ -1259,7 +1342,45 @@ class _MainScreenState extends State<MainScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Expanded(child: Container()),
+        Expanded(
+          child: !_showMenu
+              ? Container()
+              : Container(
+                  alignment: Alignment.center,
+                  child: Slider(
+                    activeColor: Color(0xFF65CCFF),
+                    inactiveColor: Color(0xFFD0D0D0),
+                    value: _currentPageNo.toDouble(),
+                    min: 0,
+                    max: _totalPageCounter.toDouble(),
+                    onChanged: (double newValue) {
+                      setState(() {
+                        _currentPageNo = newValue.toInt();
+                      });
+                    },
+                    onChangeStart: (value) {
+                      if (_showMenuTimer.isActive) {
+                        _showMenuTimer.cancel();
+                      }
+                    },
+                    onChangeEnd: (value) {
+                      print('onChangeEnd $value');
+                      if (_showMenuTimer.isActive) {
+                        _showMenuTimer.cancel();
+                      }
+
+                      _showMenuTimer = new Timer(Duration(milliseconds: 1500), () {
+                        _showMenu = false;
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      });
+
+                      _pageController.jumpToPage(value.toInt());
+                    },
+                  ),
+                ),
+        ),
         Container(
           width: 55,
           alignment: Alignment.center,
@@ -1269,13 +1390,18 @@ class _MainScreenState extends State<MainScreen> {
             fit: BoxFit.fitHeight,
           ),
         ),
-        Container(
-          width: 55,
-          alignment: Alignment.center,
-          child: Image.asset(
-            "assets/images/icon_bookmark.png",
-            height: 24,
-            fit: BoxFit.fitHeight,
+        GestureDetector(
+          onTap: () {
+            _onClickMenuSetBookMark();
+          },
+          child: Container(
+            width: 55,
+            alignment: Alignment.center,
+            child: Image.asset(
+              "assets/images/icon_bookmark.png",
+              height: 24,
+              fit: BoxFit.fitHeight,
+            ),
           ),
         ),
       ],

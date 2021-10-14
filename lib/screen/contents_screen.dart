@@ -15,12 +15,16 @@ class ContentsScreen extends StatefulWidget {
 class _ContentsScreenState extends State<ContentsScreen> {
   Settings _settings = Settings();
   List<Widget> _contents = [];
+  double _contentsWidth = 410;
 
   @override
   void initState() {
     super.initState();
 
     _contents.clear();
+    _contents.add(SizedBox(
+      height: 30,
+    ));
     _contents.add(buildContent(0, 4));
     _contents.add(buildContent(1, widget.pagesIndex[1]));
     _contents.add(buildContent(2, widget.pagesIndex[2]));
@@ -36,6 +40,15 @@ class _ContentsScreenState extends State<ContentsScreen> {
     _contents.add(buildContent(12, widget.pagesIndex[12]));
     _contents.add(buildContent(13, widget.pagesIndex[12]));
     _contents.add(buildContent(14, widget.pagesIndex[12]));
+    _contents.add(SizedBox(
+      height: 30,
+    ));
+
+    if (_settings.getScreenWidth() > 420) {
+      _contentsWidth = 420;
+    } else {
+      _contentsWidth = _settings.getScreenWidth();
+    }
   }
 
   @override
@@ -59,13 +72,18 @@ class _ContentsScreenState extends State<ContentsScreen> {
                     SizedBox(
                       width: 10,
                     ),
-                    Container(
-                      width: 40,
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.arrow_back_ios,
-                        size: 24,
-                        color: Colors.white,
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                      child: Container(
+                        width: 40,
+                        alignment: Alignment.center,
+                        child: Icon(
+                          Icons.arrow_back_ios,
+                          size: 24,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                     Expanded(
@@ -88,23 +106,24 @@ class _ContentsScreenState extends State<ContentsScreen> {
                   ],
                 ),
               ),
-              SizedBox(
-                height: 20,
-              ),
               Expanded(
                 child: SingleChildScrollView(
-                  child: Container(
-                    height: (100 * _contents.length).toDouble(),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: _contents,
-                    ),
+                  child: Row(
+                    children: [
+                      Expanded(child: Container()),
+                      Container(
+                        height: (100 * _contents.length).toDouble(),
+                        width: _contentsWidth,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: _contents,
+                        ),
+                      ),
+                      Expanded(child: Container()),
+                    ],
                   ),
                 ),
-              ),
-              SizedBox(
-                height: 20,
               ),
             ],
           ),
