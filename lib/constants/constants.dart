@@ -10,6 +10,9 @@ const double HEADER_FONT_SIZE = 18;
 const double LINE_HEIGHT = 1.7;
 const double HEADER_HORIZONTAL_SPACE = 30;
 
+const double STRONG_DIC_VERTICAL_SPACE = 60;
+const double STRONG_DIC_HORIZONTAL_SPACE = 30;
+
 const String FONT_GODIC = "notosans"; // 본고딕
 const String FONT_MYOUNGJO = "notoserif"; // 본명조
 const String FONT_GMARKET = "gmarket"; // 지마켓산스
@@ -20,6 +23,9 @@ const String FONT_KYOBO = "kyobo"; // 교보손글씨
 const double LABEL_WIDTH = 50.0;
 const Color FONT_RED_COLOR = Color(0xFFE51D52);
 const double HEADER_CONTENT_HEIGHT = 95;
+
+const double STRONG_DIC_ITEM_HEIGHT = 42;
+const double STRONG_DIC_COLUMN_WIDTH = 110;
 
 const List<String> kChapterParagraphs = [
   "1절~60절",
@@ -63,17 +69,4 @@ const List<String> kChapterTitle = [
   "속죄의 십자가",
   "부활과 가르침의 전파"
 ];
-const List<int> kStartParagraph = [
-  1,
-  61,
-  131,
-  197,
-  288,
-  401,
-  498,
-  561,
-  610,
-  683,
-  731,
-  794
-];
+const List<int> kStartParagraph = [1, 61, 131, 197, 288, 401, 498, 561, 610, 683, 731, 794];

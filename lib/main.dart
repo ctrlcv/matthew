@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
           data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
         );
       },
-      title: 'New Matthew',
+      title: 'New 마태복음',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,

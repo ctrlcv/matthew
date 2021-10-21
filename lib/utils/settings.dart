@@ -17,12 +17,14 @@ class Settings {
     _fontSize = Hive.box('matthew').get('setFontSize') ?? FONT_SIZE_3;
     _scrollVertical = Hive.box('matthew').get('setScrollVertical') ?? false;
     _bookMarks = Hive.box('matthew').get('setBookMark') ?? [];
+    _bookMarkStrong = Hive.box('matthew').get('setBookMarkStrong') ?? [];
   }
 
   static double _fontSize = FONT_SIZE_3;
   static String _fontName = FONT_GOWUN;
   static bool _scrollVertical = false;
   static List<int> _bookMarks = [];
+  static List<String> _bookMarkStrong = [];
 
   static double _screenWidth = 0;
   static double _screenHeight = 0;
@@ -32,6 +34,9 @@ class Settings {
 
   static double _headerScreenWidth = 0;
   static double _headerScreenHeight = 0;
+
+  static double _strongDicScreenWidth = 0;
+  static double _strongDicScreenHeight = 0;
 
   static double _verticalSpace = 0;
   static double _horizontalSpace = 0;
@@ -79,7 +84,7 @@ class Settings {
     _lineInfoChapter10,
     _lineInfoChapter11,
     _lineInfoChapter12,
-    _lineInfoStrongDic
+    _lineInfoEnded
   ];
 
   static List<PageInfo> _pageInfoFont1 = [];
@@ -102,7 +107,7 @@ class Settings {
   static List<LineInfo> _lineInfoChapter10 = [];
   static List<LineInfo> _lineInfoChapter11 = [];
   static List<LineInfo> _lineInfoChapter12 = [];
-  static List<LineInfo> _lineInfoStrongDic = [];
+  static List<LineInfo> _lineInfoEnded = [];
 
   void setFontSize(double fontSize) {
     _fontSize = fontSize;
@@ -131,26 +136,101 @@ class Settings {
     return _scrollVertical;
   }
 
-  bool isBookMarkPage(int paragraph) {
+  bool isBookMarkPage(var bookMarkNo) {
     bool result = false;
 
-    for (int i = 0; i < _bookMarks.length; i++) {
-      if (_bookMarks[i] == paragraph) {
-        return true;
+    if (bookMarkNo is int) {
+      for (int i = 0; i < _bookMarks.length; i++) {
+        if (_bookMarks[i] == bookMarkNo) {
+          return true;
+        }
+      }
+    } else {
+      for (int i = 0; i < _bookMarkStrong.length; i++) {
+        if (_bookMarkStrong[i] == bookMarkNo) {
+          return true;
+        }
       }
     }
+
     return result;
   }
 
-  void setBookMarks(int paragraph) {
-    if (isBookMarkPage(paragraph)) {
-      _bookMarks.remove(paragraph);
+  void setBookMarks(var bookMarkNo) {
+    if (bookMarkNo is int) {
+      if (isBookMarkPage(bookMarkNo)) {
+        _bookMarks.remove(bookMarkNo);
+      } else {
+        _bookMarks.add(bookMarkNo);
+      }
+      _bookMarks.sort();
+      print('setBookMarks $_bookMarks');
+      Hive.box('matthew').put("setBookMark", _bookMarks);
     } else {
-      _bookMarks.add(paragraph);
+      if (isBookMarkPage(bookMarkNo)) {
+        _bookMarkStrong.remove(bookMarkNo);
+      } else {
+        _bookMarkStrong.add(bookMarkNo);
+      }
+      _bookMarkStrong.sort((itemA, itemB) {
+        String itemAIndex = "";
+        String itemBIndex = "";
+
+        int itemANum = 0;
+        int itemBNum = 0;
+
+        for (int i = 0; i < itemA.length; i++) {
+          if (itemA[i] == '0' ||
+              itemA[i] == '1' ||
+              itemA[i] == '2' ||
+              itemA[i] == '3' ||
+              itemA[i] == '4' ||
+              itemA[i] == '5' ||
+              itemA[i] == '6' ||
+              itemA[i] == '7' ||
+              itemA[i] == '8' ||
+              itemA[i] == '9') {
+            itemAIndex += itemA[i];
+          } else {
+            if (itemAIndex.length != 0) {
+              break;
+            }
+          }
+        }
+
+        for (int i = 0; i < itemB.length; i++) {
+          if (itemB[i] == '0' ||
+              itemB[i] == '1' ||
+              itemB[i] == '2' ||
+              itemB[i] == '3' ||
+              itemB[i] == '4' ||
+              itemB[i] == '5' ||
+              itemB[i] == '6' ||
+              itemB[i] == '7' ||
+              itemB[i] == '8' ||
+              itemB[i] == '9') {
+            itemBIndex += itemB[i];
+          } else {
+            if (itemBIndex.length != 0) {
+              break;
+            }
+          }
+        }
+
+        itemANum = int.parse(itemAIndex);
+        itemBNum = int.parse(itemBIndex);
+
+        if (itemANum > itemBNum) {
+          return 1;
+        } else if (itemANum < itemBNum) {
+          return -1;
+        } else {
+          return 0;
+        }
+      });
+      print('setBookMarks $_bookMarkStrong');
+      Hive.box('matthew').put("setBookMarkStrong", _bookMarkStrong);
     }
-    _bookMarks.sort();
-    print('setBookMarks $_bookMarks');
-    Hive.box('matthew').put("setBookMark", _bookMarks);
   }
 
   TextStyle getFontStyle({Color color = Colors.black}) {
@@ -181,20 +261,9 @@ class Settings {
     }
 
     if (_fontName.isEmpty) {
-      return TextStyle(
-          fontSize: fontSize,
-          color: color,
-          fontWeight: fontWeight,
-          height: height,
-          letterSpacing: letterSpacing);
+      return TextStyle(fontSize: fontSize, color: color, fontWeight: fontWeight, height: height, letterSpacing: letterSpacing);
     } else {
-      return TextStyle(
-          fontFamily: _fontName,
-          fontSize: fontSize,
-          color: color,
-          fontWeight: fontWeight,
-          height: height,
-          letterSpacing: letterSpacing);
+      return TextStyle(fontFamily: _fontName, fontSize: fontSize, color: color, fontWeight: fontWeight, height: height, letterSpacing: letterSpacing);
     }
   }
 
@@ -231,7 +300,6 @@ class Settings {
   }
 
   void setHeaderScreenWidth(double headerWidth) {
-    print('setHeaderScreenWidth() $headerWidth');
     _headerScreenWidth = headerWidth;
   }
 
@@ -240,12 +308,27 @@ class Settings {
   }
 
   void setHeaderScreenHeight(double headerHeight) {
-    print('setHeaderScreenHeight() $headerHeight');
     _headerScreenHeight = headerHeight;
   }
 
   double getHeaderScreenHeight() {
     return _headerScreenHeight;
+  }
+
+  void setStrongDicScreenWidth(double strongDicWidth) {
+    _strongDicScreenWidth = strongDicWidth;
+  }
+
+  double getStrongDicScreenWidth() {
+    return _strongDicScreenWidth;
+  }
+
+  void setStrongDicScreenHeight(double stringDicHeight) {
+    _strongDicScreenHeight = stringDicHeight;
+  }
+
+  double getStrongDicScreenHeight() {
+    return _strongDicScreenHeight;
   }
 
   void setVerticalSpace(double space) {
@@ -299,7 +382,7 @@ class Settings {
     _lineInfoChapter10 = [];
     _lineInfoChapter11 = [];
     _lineInfoChapter12 = [];
-    _lineInfoStrongDic = [];
+    _lineInfoEnded = [];
   }
 
   void setMaxLines(double fontSize, int maxLines) {
@@ -446,7 +529,7 @@ class Settings {
         _lineInfoChapter12 = lineInfo;
         break;
       case 13:
-        _lineInfoStrongDic = lineInfo;
+        _lineInfoEnded = lineInfo;
         break;
     }
   }
@@ -480,7 +563,7 @@ class Settings {
       case 12:
         return _lineInfoChapter12;
       case 13:
-        return _lineInfoStrongDic;
+        return _lineInfoEnded;
     }
 
     return _lineInfoHeader;

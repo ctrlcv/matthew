@@ -38,8 +38,8 @@ class _ContentsScreenState extends State<ContentsScreen> {
     _contents.add(buildContent(10, widget.pagesIndex[10]));
     _contents.add(buildContent(11, widget.pagesIndex[11]));
     _contents.add(buildContent(12, widget.pagesIndex[12]));
-    _contents.add(buildContent(13, widget.pagesIndex[12]));
-    _contents.add(buildContent(14, widget.pagesIndex[12]));
+    _contents.add(buildContent(13, widget.pagesIndex[13]));
+    _contents.add(buildContent(14, widget.pagesIndex[14]));
     _contents.add(SizedBox(
       height: 30,
     ));
@@ -60,6 +60,7 @@ class _ContentsScreenState extends State<ContentsScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: Color(0xFFF6FAEE),
         body: Container(
           alignment: Alignment.topCenter,
           child: Column(
@@ -141,14 +142,16 @@ class _ContentsScreenState extends State<ContentsScreen> {
         children: [
           Container(
             width: 50,
+            height: 84,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  height: 34,
+                  height: 38,
                   width: 50,
                   alignment: Alignment.bottomLeft,
+                  padding: EdgeInsets.only(bottom: (chapter == 0 || chapter == 13 || chapter == 14) ? 0 : 3),
                   child: InkWell(
                     onTap: () {
                       Navigator.pop(context);
@@ -177,15 +180,14 @@ class _ContentsScreenState extends State<ContentsScreen> {
                     ),
                   ),
                 ),
-                SizedBox(
-                  height: 30,
-                ),
+                Expanded(child: Container()),
               ],
             ),
           ),
           SizedBox(width: 2),
           Expanded(
             child: Container(
+              height: 84,
               alignment: Alignment.centerLeft,
               child: Column(
                 mainAxisSize: MainAxisSize.max,
@@ -193,8 +195,8 @@ class _ContentsScreenState extends State<ContentsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Container(
-                    height: 34,
-                    alignment: Alignment.centerLeft,
+                    height: 38,
+                    alignment: Alignment.bottomLeft,
                     child: InkWell(
                       onTap: () {
                         Navigator.pop(context);

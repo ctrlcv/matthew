@@ -52,23 +52,23 @@ class _FontSetDialogState extends State<FontSetDialog> {
                 ),
               ),
             ),
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(context, "");
-              },
-              child: Container(
-                height: 45,
-                color: Colors.white,
-                alignment: Alignment.center,
-                child: Text(
-                  "시스템폰트",
-                  style: TextStyle(
-                    fontSize: 22,
-                    color: Color(0xFF7B7979),
-                  ),
-                ),
-              ),
-            ),
+            // GestureDetector(
+            //   onTap: () {
+            //     Navigator.pop(context, "");
+            //   },
+            //   child: Container(
+            //     height: 45,
+            //     color: Colors.white,
+            //     alignment: Alignment.center,
+            //     child: Text(
+            //       "시스템폰트",
+            //       style: TextStyle(
+            //         fontSize: 22,
+            //         color: Color(0xFF7B7979),
+            //       ),
+            //     ),
+            //   ),
+            // ),
             GestureDetector(
               onTap: () {
                 Navigator.pop(context, "notosans");

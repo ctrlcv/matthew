@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:matthew/models/bookmark_model.dart';
 import 'package:matthew/utils/settings.dart';
@@ -90,14 +91,28 @@ class _BookMarkScreenState extends State<BookMarkScreen> {
               ),
               Expanded(
                 child: SingleChildScrollView(
-                  child: Container(
-                    height: (86 * (_contents.length - 2)).toDouble() + 60.0,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: _contents,
-                    ),
-                  ),
+                  child: (widget.bookMarks.length == 0)
+                      ? Container(
+                          height: _settings.getSafeScreenHeight(),
+                          alignment: Alignment.center,
+                          child: Text(
+                            "북마크된 항목이 없습니다",
+                            style: TextStyle(
+                              fontFamily: _settings.getFontName(),
+                              fontSize: 22,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : Container(
+                          height: (86 * (_contents.length - 2)).toDouble() + 60.0,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: _contents,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -108,6 +123,58 @@ class _BookMarkScreenState extends State<BookMarkScreen> {
   }
 
   Widget buildBookMark(BookMark bookmark, int index) {
+    if (bookmark.paragraph != -1) {
+      return Container(
+        height: 86,
+        padding: EdgeInsets.symmetric(horizontal: 36),
+        alignment: Alignment.center,
+        child: Row(
+          children: [
+            Container(
+              width: 67,
+              height: 86,
+              color: (index % 2 == 0) ? Color(0xFF142A4D) : Color(0xFF167EC7),
+              alignment: Alignment.center,
+              child: Text(
+                bookmark.paragraph.toString() + "\n절",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: _settings.getFontName(),
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            Expanded(
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  widget.onClickPage(bookmark.pageNo);
+                },
+                child: Container(
+                  height: 86,
+                  color: (index % 2 == 0) ? Color(0xFFEDEDED) : Colors.white,
+                  padding: EdgeInsets.symmetric(horizontal: 19),
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    bookmark.paragraphStr,
+                    textAlign: TextAlign.justify,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 3,
+                    style: TextStyle(
+                      fontFamily: _settings.getFontName(),
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Container(
       height: 86,
       padding: EdgeInsets.symmetric(horizontal: 36),
@@ -115,16 +182,17 @@ class _BookMarkScreenState extends State<BookMarkScreen> {
       child: Row(
         children: [
           Container(
-            width: 62,
+            width: 67,
             height: 86,
             color: (index % 2 == 0) ? Color(0xFF142A4D) : Color(0xFF167EC7),
             alignment: Alignment.center,
-            child: Text(
-              bookmark.paragraph.toString() + "\n절",
+            child: AutoSizeText(
+              bookmark.strongCode,
               textAlign: TextAlign.center,
+              maxLines: 5,
               style: TextStyle(
                 fontFamily: _settings.getFontName(),
-                fontSize: 18,
+                fontSize: 16,
                 color: Colors.white,
               ),
             ),

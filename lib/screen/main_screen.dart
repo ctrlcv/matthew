@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'dart:ui';
 
+import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
 import 'package:matthew/dialog/font_set_dialog.dart';
 import 'package:matthew/models/bookmark_model.dart';
+import 'package:matthew/models/strong_dic_data.dart';
+import 'package:matthew/screen/pdf_screen.dart';
+import 'package:matthew/screen/search_screen.dart';
 import 'package:matthew/utils/settings.dart';
 
 import '../constants/constants.dart';
@@ -43,7 +48,7 @@ class _MainScreenState extends State<MainScreen> {
   List<LineInfo> _lineInfoChapter10 = [];
   List<LineInfo> _lineInfoChapter11 = [];
   List<LineInfo> _lineInfoChapter12 = [];
-  List<LineInfo> _lineInfoStrongDic = [];
+  List<LineInfo> _lineInfoEnded = [];
 
   int _bookTitleCounter = 4;
   int _headerPageCounter = 0;
@@ -62,6 +67,7 @@ class _MainScreenState extends State<MainScreen> {
   int _chapter11PageCounter = 0;
   int _chapter12PageCounter = 0;
   int _strongDicPageCounter = 0;
+  int _endedPageCounter = 0;
   int _totalHeaderCounter = 0;
   int _totalPageCounter = 0;
 
@@ -85,6 +91,8 @@ class _MainScreenState extends State<MainScreen> {
   int _firstParagraph = -1;
   int _lastParagraph = -1;
 
+  bool _isCopyMode = false;
+
   @override
   void initState() {
     print("MainViewer initState()");
@@ -99,9 +107,28 @@ class _MainScreenState extends State<MainScreen> {
 
     calculatorPageInfo();
 
-    int currentParagraph = Hive.box("matthew").get("currentParagraph") ?? 0;
-    print('currentParagraph $currentParagraph');
-    jumpToPage(currentParagraph);
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      int currentPage = Hive.box('matthew').get("currentPage") ?? -1;
+
+      if (currentPage == -1) {
+        int currentParagraph = Hive.box("matthew").get("currentParagraph") ?? -1;
+        String currentStrongDicCode = Hive.box('matthew').get("currentStrongCode") ?? "";
+        print('mainScreen() initState() - fail to load currentPage =========================');
+        print('currentParagraph $currentParagraph currentStrongDicCode $currentStrongDicCode');
+
+        if (currentStrongDicCode.isNotEmpty) {
+          jumpToPageByStrongCode(currentStrongDicCode);
+        } else if (currentParagraph != -1) {
+          jumpToPageByParagraph(currentParagraph);
+        } else {
+          _pageController.jumpToPage(0);
+        }
+      } else {
+        print('mainScreen() initState() - success to load currentPage =======================');
+        print('currentPage $currentPage');
+        _pageController.jumpToPage(currentPage);
+      }
+    });
   }
 
   void calculatorPageInfo() {
@@ -118,6 +145,7 @@ class _MainScreenState extends State<MainScreen> {
     _lineInfoChapter10 = _settings.getLineInfo(10);
     _lineInfoChapter11 = _settings.getLineInfo(11);
     _lineInfoChapter12 = _settings.getLineInfo(12);
+    _lineInfoEnded = _settings.getLineInfo(13);
 
     int maxLines = _settings.getMaxLines(_settings.getFontSize());
     int headerMaxLines = _settings.getHeaderMaxLines(_settings.getFontSize());
@@ -136,10 +164,9 @@ class _MainScreenState extends State<MainScreen> {
     _chapter10PageCounter = getPageCounter(_lineInfoChapter10, maxLines);
     _chapter11PageCounter = getPageCounter(_lineInfoChapter11, maxLines);
     _chapter12PageCounter = getPageCounter(_lineInfoChapter12, maxLines);
-
     _totalHeaderCounter = _bookTitleCounter + _headerPageCounter + _contentCounter + _innerTitleCounter;
-
-    print('_lineInfoChapter5.length ${_lineInfoChapter5.length} _chapter5PageCounter $_chapter5PageCounter');
+    _strongDicPageCounter = getStrongDicPageCounter();
+    _endedPageCounter = getHeaderPageCounter(_lineInfoEnded, headerMaxLines);
 
     _totalPageCounter = _totalHeaderCounter +
         _chapter1PageCounter +
@@ -154,7 +181,8 @@ class _MainScreenState extends State<MainScreen> {
         _chapter10PageCounter +
         _chapter11PageCounter +
         _chapter12PageCounter +
-        _strongDicPageCounter;
+        _strongDicPageCounter +
+        _endedPageCounter;
 
     _pageIndex = [
       4,
@@ -247,7 +275,22 @@ class _MainScreenState extends State<MainScreen> {
           _chapter10PageCounter +
           _chapter11PageCounter +
           _chapter12PageCounter +
-          _strongDicPageCounter
+          _strongDicPageCounter,
+      _totalHeaderCounter +
+          _chapter1PageCounter +
+          _chapter2PageCounter +
+          _chapter3PageCounter +
+          _chapter4PageCounter +
+          _chapter5PageCounter +
+          _chapter6PageCounter +
+          _chapter7PageCounter +
+          _chapter8PageCounter +
+          _chapter9PageCounter +
+          _chapter10PageCounter +
+          _chapter11PageCounter +
+          _chapter12PageCounter +
+          _strongDicPageCounter +
+          _endedPageCounter
     ];
 
     _lineInfoList = [
@@ -264,7 +307,7 @@ class _MainScreenState extends State<MainScreen> {
       _lineInfoChapter10,
       _lineInfoChapter11,
       _lineInfoChapter12,
-      _lineInfoStrongDic,
+      _lineInfoEnded,
     ];
 
     print(_pageIndex);
@@ -296,6 +339,23 @@ class _MainScreenState extends State<MainScreen> {
     } else {
       pageCount = (15 / maxLines).floor() + 1;
     }
+
+    return pageCount;
+  }
+
+  int getStrongDicPageCounter() {
+    int pageCount = 0;
+
+    double screenHeight = _settings.getStrongDicScreenHeight();
+    int maxLines = (screenHeight / STRONG_DIC_ITEM_HEIGHT).floor();
+
+    if (kStrongDic.length % maxLines == 0) {
+      pageCount = (kStrongDic.length / maxLines).floor() + 1;
+    } else {
+      pageCount = (kStrongDic.length / maxLines).floor() + 2;
+    }
+
+    print('getStrongDicPageCounter() $pageCount');
 
     return pageCount;
   }
@@ -333,30 +393,62 @@ class _MainScreenState extends State<MainScreen> {
 
     print('_onPageChange() page ' + _beforePageNo.toString() + ' --> ' + _currentPageNo.toString());
 
-    print('_onPageChange() _firstParagraph $_firstParagraph');
-    print('_onPageChange() _lastParagraph $_lastParagraph');
+    // print('_onPageChange() _firstParagraph $_firstParagraph');
+    // print('_onPageChange() _lastParagraph $_lastParagraph');
+    // print('_onPageChange() _pageIndex[13] ${_pageIndex[13]}');
 
     int storeParagraph = isChapterTitlePage(pageNo);
-    if (storeParagraph >= 0) {
-      storeParagraph = _firstParagraph;
+    Hive.box('matthew').put("currentPage", _currentPageNo);
+
+    if (!isStrongCodePage() || _currentPageNo == _pageIndex[13]) {
+      if (storeParagraph >= 0) {
+        storeParagraph = _firstParagraph;
+      }
+
+      if (_currentPageNo < _totalHeaderCounter) {
+        storeParagraph = (_currentPageNo * -1) - 100;
+      }
+
+      print('_onPageChange() storePageInfo - storeParagraph: $storeParagraph');
+      Hive.box('matthew').put("currentParagraph", storeParagraph);
+      Hive.box('matthew').put("currentStrongCode", "");
+    } else {
+      String firstStrongCode = getStrongCodeByPageNo(_currentPageNo);
+
+      print('_onPageChange() storePageInfo - firstStrongCode: $firstStrongCode');
+      Hive.box('matthew').put("currentParagraph", -1);
+      Hive.box('matthew').put("currentStrongCode", firstStrongCode);
     }
 
-    if (_currentPageNo < _totalHeaderCounter) {
-      storeParagraph = (_currentPageNo * -1) - 100;
-    }
-
-    Hive.box('matthew').put("currentParagraph", storeParagraph);
-    // print(getPageNoByParagraph(storeParagraph));
-
-    // if (_currentPageNo > 2 + _headerPageCounter && _currentPageNo < _totalHeaderCounter) {
     if (mounted) {
       setState(() {});
     }
-    // }
   }
 
   void _onClickMenuSearch() {
     print('onClickMenuSearch()');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SearchScreen(
+          onClickParagraph: (paragraphNo) {
+            print("onClickParagraph $paragraphNo");
+            _pageController.jumpToPage(getPageNoByParagraph(paragraphNo));
+            if (mounted) {
+              setState(() {});
+            }
+          },
+          onClickStrongCode: (strongCode) {
+            print("onClickStrongCode $strongCode");
+            _pageController.jumpToPage(getPageNoByStrongDicCode(strongCode));
+            if (mounted) {
+              setState(() {});
+            }
+          },
+        ),
+      ),
+    );
   }
 
   void _onClickMenuViewBookMark() {
@@ -376,11 +468,7 @@ class _MainScreenState extends State<MainScreen> {
         builder: (context) => BookMarkScreen(
           onClickPage: (value) {
             print("onClickPage $value");
-            _pageController.animateToPage(
-              value,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-            );
+            _pageController.jumpToPage(value);
             if (mounted) {
               setState(() {});
             }
@@ -397,36 +485,109 @@ class _MainScreenState extends State<MainScreen> {
     List<int> bookmarks = Hive.box('matthew').get('setBookMark') ?? [];
 
     for (int i = 0; i < bookmarks.length; i++) {
-      result.add(
-        BookMark(
-          paragraph: bookmarks[i],
-          pageNo: getPageNoByParagraph(bookmarks[i]),
-          paragraphStr: getParagraphStrByNumber(bookmarks[i]),
-        ),
+      BookMark bMark = BookMark(
+        paragraph: bookmarks[i],
+        pageNo: getPageNoByParagraph(bookmarks[i]),
+        paragraphStr: getParagraphStrByNumber(bookmarks[i]),
       );
+      // print(bMark);
+      result.add(bMark);
+    }
+
+    List<String> bookmarkStrong = Hive.box('matthew').get('setBookMarkStrong') ?? [];
+
+    for (int i = 0; i < bookmarkStrong.length; i++) {
+      BookMark bMark = BookMark(
+        paragraph: -1,
+        pageNo: getPageNoByStrongDicCode(bookmarkStrong[i]),
+        paragraphStr: getStrongDicMean(bookmarkStrong[i]),
+        strongCode: bookmarkStrong[i],
+      );
+
+      print(bMark);
+      result.add(bMark);
     }
 
     return result;
+  }
+
+  String getStrongDicMean(String code) {
+    for (int i = 0; i < kStrongDic.length; i++) {
+      if (code == kStrongDic[i].code) {
+        return kStrongDic[i].mean;
+      }
+    }
+    return "";
+  }
+
+  String getStrongCodeByPageNo(int pageNo) {
+    int indexOfDic = pageNo - _pageIndex[13];
+    int maxLines = (_settings.getStrongDicScreenHeight() / STRONG_DIC_ITEM_HEIGHT).floor();
+    int firstStrongIndex = (maxLines * (indexOfDic - 1)) - 1;
+    print('getStrongCodeByPageNo() indexOfDic $indexOfDic, firstStrongIndex $firstStrongIndex');
+
+    if (firstStrongIndex < 0) {
+      firstStrongIndex = 0;
+    }
+    if (firstStrongIndex >= kStrongDic.length) {
+      firstStrongIndex = kStrongDic.length - 1;
+    }
+
+    return kStrongDic[firstStrongIndex].code;
+  }
+
+  int getPageNoByStrongDicCode(String code) {
+    int indexOfDic = -1;
+    for (int i = 0; i < kStrongDic.length; i++) {
+      if (code == kStrongDic[i].code) {
+        indexOfDic = i;
+        break;
+      }
+    }
+
+    int startPageIndex = _pageIndex[13];
+    int maxLines = (_settings.getStrongDicScreenHeight() / STRONG_DIC_ITEM_HEIGHT).floor();
+
+    print('getPageNoByStrongDicCode indexOfDic $indexOfDic startPageIndex $startPageIndex, maxLines $maxLines');
+
+    for (int i = 1; i < _strongDicPageCounter; i++) {
+      int startIndex;
+      int endIndex;
+
+      if (i == 1) {
+        startIndex = 0;
+        endIndex = startIndex + maxLines - 1;
+      } else {
+        startIndex = (maxLines * (i - 1)) - 1;
+        endIndex = startIndex + maxLines;
+      }
+
+      if (startIndex <= indexOfDic && indexOfDic <= endIndex) {
+        return startPageIndex + i + 1;
+      }
+    }
+
+    return -1;
   }
 
   String getParagraphStrByNumber(int paragraph) {
     String result = "";
     int chapterNo = getChapterNoByParagraph(paragraph);
     int chapterIndex = kStartParagraph[chapterNo - 1];
-    print('chapterNo : $chapterNo, chapterIndex $chapterIndex');
+    print('paragraph : $paragraph, chapterNo : $chapterNo, chapterIndex $chapterIndex');
     List<LineInfo> lineInfo = _lineInfoList[chapterNo];
 
     for (int i = 0; i < lineInfo.length; i++) {
-      if (lineInfo[i].paragraph + chapterIndex < paragraph) {
+      if (lineInfo[i].paragraph + chapterIndex - 1 < paragraph) {
         continue;
-      } else if (lineInfo[i].paragraph + chapterIndex > paragraph) {
+      } else if (lineInfo[i].paragraph + chapterIndex - 1 > paragraph) {
         break;
       }
-
+      // print(lineInfo[i].paragraph);
       result = result + lineInfo[i].lineText;
     }
 
-    print(result);
+    // print(result);
     return result;
   }
 
@@ -466,6 +627,52 @@ class _MainScreenState extends State<MainScreen> {
 
     if (_showMenuTimer.isActive) {
       _showMenuTimer.cancel();
+    }
+
+    if (isStrongCodePage()) {
+      int indexOfChapter = _currentPageNo - _pageIndex[13];
+      int startIndex;
+      int endIndex;
+      int maxLines = (_settings.getStrongDicScreenHeight() / STRONG_DIC_ITEM_HEIGHT).floor();
+
+      if (indexOfChapter == 1) {
+        startIndex = 0;
+        endIndex = startIndex + maxLines - 1;
+      } else {
+        startIndex = (maxLines * (indexOfChapter - 1)) - 1;
+        endIndex = startIndex + maxLines;
+      }
+
+      bool isBookMarked = false;
+
+      for (int i = startIndex; i < endIndex; i++) {
+        if (i >= kStrongDic.length) {
+          break;
+        }
+
+        if (_settings.isBookMarkPage(kStrongDic[i].code)) {
+          isBookMarked = true;
+          break;
+        }
+      }
+
+      if (isBookMarked) {
+        print('_onClickMenuSetBookMark() [Strong] isBookMarked is TRUE, remove bookMark');
+        for (int i = startIndex; i < endIndex; i++) {
+          if (_settings.isBookMarkPage(kStrongDic[i].code)) {
+            _settings.setBookMarks(kStrongDic[i].code);
+          }
+        }
+      } else {
+        print('_onClickMenuSetBookMark() [Strong] isBookMarked is FALSE, Add New bookMark');
+        _settings.setBookMarks(kStrongDic[startIndex].code);
+      }
+
+      if (mounted) {
+        setState(() {});
+      }
+
+      return;
     }
 
     if (_firstParagraph == -1) {
@@ -528,6 +735,13 @@ class _MainScreenState extends State<MainScreen> {
 
   void _onClickMenuPdf() {
     print('onClickMenuPdf()');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PdfScreen(),
+      ),
+    );
   }
 
   @override
@@ -548,9 +762,57 @@ class _MainScreenState extends State<MainScreen> {
                 );
               },
             ),
-            buildControlPanel(),
+            if (!_isCopyMode) buildControlPanel(),
+            if (_isCopyMode) buildCopyModeTitle(),
+            if (_showFontSetPanel || _showScrollSetPanel)
+              Container(
+                color: Color(0x77000000),
+              ),
             if (_showFontSetPanel) buildSetFontPanel(),
             if (_showScrollSetPanel) buildSetScrollPanel(),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget buildCopyModeTitle() {
+    return Positioned(
+      top: 20,
+      left: 0,
+      child: Container(
+        height: 24,
+        width: _settings.getScreenWidth(),
+        alignment: Alignment.center,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.copy,
+              color: Color(0xFF167EC7),
+              size: 20,
+            ),
+            SizedBox(
+              width: 6,
+            ),
+            Container(
+              height: 24,
+              padding: EdgeInsets.symmetric(horizontal: 32),
+              decoration: BoxDecoration(
+                color: Color(0xFF167EC7),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                "복사모드",
+                style: TextStyle(
+                  fontFamily: _settings.getFontName(),
+                  fontSize: 16,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -607,6 +869,14 @@ class _MainScreenState extends State<MainScreen> {
                 );
               },
               child: GestureDetector(
+                onLongPress: () {
+                  print('onControl - onLongPress()');
+                  _isCopyMode = true;
+
+                  if (mounted) {
+                    setState(() {});
+                  }
+                },
                 onTap: () {
                   print('onControl - onTap $_currentPageNo $_totalHeaderCounter');
                   if (_currentPageNo < _totalHeaderCounter) {
@@ -649,6 +919,14 @@ class _MainScreenState extends State<MainScreen> {
                   flex: 10,
                   child: SizedBox.expand(
                     child: GestureDetector(
+                      onLongPress: () {
+                        print('onControl - onLongPress()');
+                        _isCopyMode = true;
+
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      },
                       onTap: () {
                         _showMenu = false;
 
@@ -675,6 +953,14 @@ class _MainScreenState extends State<MainScreen> {
                   flex: 12,
                   child: SizedBox.expand(
                     child: GestureDetector(
+                      onLongPress: () {
+                        print('onControl - onLongPress()');
+                        _isCopyMode = true;
+
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      },
                       onTap: () {
                         print('onControl - onTap $_currentPageNo $_totalHeaderCounter');
                         if (_currentPageNo < _totalHeaderCounter) {
@@ -713,6 +999,14 @@ class _MainScreenState extends State<MainScreen> {
                   flex: 10,
                   child: SizedBox.expand(
                     child: GestureDetector(
+                      onLongPress: () {
+                        print('onControl - onLongPress()');
+                        _isCopyMode = true;
+
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      },
                       onTap: () {
                         _showMenu = false;
 
@@ -813,10 +1107,124 @@ class _MainScreenState extends State<MainScreen> {
       left: 0,
       child: Container(
         width: _settings.getScreenWidth() - 48,
-        height: 188,
+        height: 568,
         margin: EdgeInsets.symmetric(horizontal: 24),
         child: Column(
           children: [
+            Container(
+              height: 350,
+              decoration: BoxDecoration(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(
+                  color: Color(0xFF167EC7),
+                  width: 1.0,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    height: 45,
+                    decoration: BoxDecoration(
+                      color: Color(0xFF167EC7),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(5),
+                        topRight: Radius.circular(5),
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      "미리보기",
+                      style: TextStyle(
+                        fontFamily: _settings.getFontName(),
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 305,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.only(
+                          bottomLeft: Radius.circular(5),
+                          bottomRight: Radius.circular(5),
+                        ),
+                      ),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 30,
+                          vertical: 20,
+                        ),
+                        alignment: Alignment.center,
+                        child: RichText(
+                          textAlign: TextAlign.justify,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 6,
+                          text: TextSpan(
+                            text: "그때부터 예수님은 “",
+                            style: TextStyle(
+                              fontFamily: _setFontName,
+                              fontSize: _setFontSize,
+                              color: Colors.black,
+                              height: 1.4,
+                            ),
+                            children: [
+                              TextSpan(
+                                text: "회개해라! 하늘들의 왕국이 가까왔기 때문이다.",
+                                style: TextStyle(
+                                  fontFamily: _setFontName,
+                                  fontSize: _setFontSize,
+                                  color: Colors.red,
+                                ),
+                              ),
+                              TextSpan(
+                                text: "”라고 전파하시며 말씀하시기 시작하셨습니다",
+                                style: TextStyle(
+                                  fontFamily: _setFontName,
+                                  fontSize: _setFontSize,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              // TextSpan(
+                              //   text: "\n예수님께서 갈릴리 바닷가를 걸으시다가 바다로 그물을 던지는 두 형제 곧 베드로라 하는 시몬과 그의 형제 안드레를 보셨습니다. 그들이 어부였기에 그들에게 말씀하십니다. “",
+                              //   style: TextStyle(
+                              //     fontFamily: _setFontName,
+                              //     fontSize: _setFontSize,
+                              //     color: Colors.black,
+                              //   ),
+                              // ),
+                              // TextSpan(
+                              //   text: "나를 뒤쫓아 와라! 너희를 사람들의 어부들로 만들 것이다.",
+                              //   style: TextStyle(
+                              //     fontFamily: _setFontName,
+                              //     fontSize: _setFontSize,
+                              //     color: Colors.red,
+                              //   ),
+                              // ),
+                              // TextSpan(
+                              //   text: "”",
+                              //   style: TextStyle(
+                              //     fontFamily: _setFontName,
+                              //     fontSize: _setFontSize,
+                              //     color: Colors.black,
+                              //   ),
+                              // ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Container(
+              height: 30,
+              color: Colors.transparent,
+            ),
             Container(
               height: 6,
               color: Color(0xFF167EC7),
@@ -853,7 +1261,7 @@ class _MainScreenState extends State<MainScreen> {
                           );
 
                           print(resultStr);
-                          if (resultStr != null) {
+                          if (resultStr != null && resultStr.isNotEmpty) {
                             _setFontName = resultStr;
                           }
 
@@ -1105,8 +1513,18 @@ class _MainScreenState extends State<MainScreen> {
 
                       calculatorPageInfo();
 
-                      int currentParagraph = Hive.box("matthew").get("currentParagraph");
-                      jumpToPage(currentParagraph);
+                      int currentParagraph = Hive.box("matthew").get("currentParagraph") ?? -1;
+                      String currentStrongCode = Hive.box("matthew").get("currentStrongCode") ?? "";
+
+                      if (currentParagraph != -1) {
+                        jumpToPageByParagraph(currentParagraph);
+                      } else if (currentStrongCode.isNotEmpty) {
+                        jumpToPageByStrongCode(currentStrongCode);
+                      } else {
+                        print("INVALID STATUS, currentParagraph $currentParagraph, currentStrongCode $currentStrongCode");
+                        _pageController.jumpToPage(0);
+                        _currentPageNo = 0;
+                      }
 
                       if (mounted) {
                         setState(() {});
@@ -1377,17 +1795,25 @@ class _MainScreenState extends State<MainScreen> {
                       });
 
                       _pageController.jumpToPage(value.toInt());
+                      if (mounted) {
+                        setState(() {});
+                      }
                     },
                   ),
                 ),
         ),
-        Container(
-          width: 55,
-          alignment: Alignment.center,
-          child: Image.asset(
-            "assets/images/icon_search.png",
-            height: 24,
-            fit: BoxFit.fitHeight,
+        GestureDetector(
+          onTap: () {
+            _onClickMenuSearch();
+          },
+          child: Container(
+            width: 55,
+            alignment: Alignment.center,
+            child: Image.asset(
+              "assets/images/icon_search.png",
+              height: 24,
+              fit: BoxFit.fitHeight,
+            ),
           ),
         ),
         GestureDetector(
@@ -1445,8 +1871,8 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  void jumpToPage(int paragraph) {
-    print('jumpToPage paragraph $paragraph');
+  void jumpToPageByParagraph(int paragraph) {
+    print('jumpToPageByParagraph paragraph $paragraph');
 
     int pageNo;
 
@@ -1454,10 +1880,28 @@ class _MainScreenState extends State<MainScreen> {
       pageNo = (paragraph + 100) * -1;
     } else {
       pageNo = getPageNoByParagraph(paragraph);
-      print('jumpToPage pageNo $pageNo');
+      print('jumpToPageByParagraph pageNo $pageNo');
       if (pageNo <= 0) {
         pageNo = 0;
       }
+    }
+
+    if (_pageController.hasClients) {
+      _pageController.jumpToPage(pageNo);
+      _currentPageNo = pageNo;
+    } else {
+      Future.delayed(Duration(milliseconds: 300), () {
+        _pageController.jumpToPage(pageNo);
+        _currentPageNo = pageNo;
+      });
+    }
+  }
+
+  void jumpToPageByStrongCode(String code) {
+    int pageNo = getPageNoByStrongDicCode(code);
+    print('jumpToPageByStrongCode code $code pageNo $pageNo');
+    if (pageNo <= 0) {
+      pageNo = 0;
     }
 
     if (_pageController.hasClients) {
@@ -1508,8 +1952,7 @@ class _MainScreenState extends State<MainScreen> {
     int offset = ((maxLines / 3) * 2).floor();
 
     // print('getPageNoByParagraph $paragraph');
-    // print(
-    //     'chapterNo $chapterNo, startPageIndex, $startPageIndex, maxLines $maxLines, offset $offset');
+    // print('chapterNo $chapterNo, startPageIndex, $startPageIndex, maxLines $maxLines, offset $offset');
 
     int pageOffset = 1;
     int lineCounter = maxLines - offset;
@@ -1528,6 +1971,28 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     return startPageIndex + pageOffset;
+  }
+
+  void _copyToClipboardOnStrongDic(String copyText) {
+    FlutterClipboard.copy(copyText).then((value) {
+      print('onTap() paragraph copy :$copyText');
+
+      String codeStr = copyText.substring(0, copyText.indexOf(":"));
+
+      Fluttertoast.showToast(
+          msg: "  [$codeStr]코드가 복사되었습니다.  ",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Color(0x99000000),
+          textColor: Colors.white,
+          fontSize: 14.0);
+    });
+
+    _isCopyMode = false;
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Widget getBodyText(int index) {
@@ -1569,6 +2034,17 @@ class _MainScreenState extends State<MainScreen> {
           setState(() {});
         }
       });
+    }
+
+    // print('_pageIndex[13] ${_pageIndex[13]} _pageIndex[14] ${_pageIndex[14]}');
+    // print('totalPageCounter $_totalPageCounter');
+
+    if (index >= _pageIndex[13] && index < _pageIndex[14]) {
+      return _headerPage.getStrongDicPage(index, _pageIndex[13], _isCopyMode, _copyToClipboardOnStrongDic);
+    }
+
+    if (index >= _pageIndex[14]) {
+      return _headerPage.getEndedPage(index, _pageIndex[14], _totalPageCounter);
     }
 
     List<Widget> lines = [];
@@ -1647,27 +2123,51 @@ class _MainScreenState extends State<MainScreen> {
             if (i == 0 || lineInfoList[i].paragraph != lineInfoList[i - 1].paragraph)
               Column(
                 children: [
-                  Container(
-                    width: LABEL_WIDTH - 10,
-                    height: cellHeight,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border(
-                        top: BorderSide(
-                          color: Color(0xFFDBB37D),
-                          width: 1.0,
+                  GestureDetector(
+                    onTap: () {
+                      int paragraphNo = kStartParagraph[chapterIndex - 1] + lineInfoList[i].paragraph - 1;
+                      String copyText = getParagraphStrByNumber(paragraphNo);
+
+                      FlutterClipboard.copy(copyText).then((value) {
+                        print('onTap() paragraph copy :$copyText');
+                        Fluttertoast.showToast(
+                            msg: "  [$paragraphNo]절이 복사되었습니다.  ",
+                            toastLength: Toast.LENGTH_SHORT,
+                            gravity: ToastGravity.BOTTOM,
+                            timeInSecForIosWeb: 1,
+                            backgroundColor: Color(0x99000000),
+                            textColor: Colors.white,
+                            fontSize: 14.0);
+                      });
+
+                      _isCopyMode = false;
+
+                      if (mounted) {
+                        setState(() {});
+                      }
+                    },
+                    child: Container(
+                      width: LABEL_WIDTH - 10,
+                      height: cellHeight,
+                      decoration: BoxDecoration(
+                        color: (!_isCopyMode) ? Colors.white : Color(0xFFFCFCD5),
+                        border: Border(
+                          top: BorderSide(
+                            color: Color(0xFFDBB37D),
+                            width: 1.0,
+                          ),
                         ),
                       ),
-                    ),
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      getParagraphsStr(kStartParagraph[chapterIndex - 1] + lineInfoList[i].paragraph - 1),
-                      style: TextStyle(
-                        fontFamily: _settings.getFontName(),
-                        fontSize: paragraphFontSize,
-                        color: Color(0xFF00AB4E),
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: -0.9,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        getParagraphsStr(kStartParagraph[chapterIndex - 1] + lineInfoList[i].paragraph - 1),
+                        style: TextStyle(
+                          fontFamily: _settings.getFontName(),
+                          fontSize: paragraphFontSize,
+                          color: Color(0xFF00AB4E),
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.9,
+                        ),
                       ),
                     ),
                   ),
@@ -1716,6 +2216,14 @@ class _MainScreenState extends State<MainScreen> {
           ),
       ],
     );
+  }
+
+  bool isStrongCodePage() {
+    if (_currentPageNo >= _pageIndex[13] && _currentPageNo < _pageIndex[14]) {
+      return true;
+    }
+
+    return false;
   }
 
   RichText buildLineText(List<LineInfo> lineInfoList, int i) {
@@ -2175,23 +2683,9 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           Center(
             child: Image.asset(
-              'assets/images/chapter_sub_title_bg.png',
+              'assets/images/chapter_sub_title.png',
               height: 157.3,
               fit: BoxFit.fitHeight,
-            ),
-          ),
-          Center(
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 122,
-                ),
-                Image.asset(
-                  'assets/images/chapter_sub_title_text.png',
-                  height: 25,
-                  fit: BoxFit.fitHeight,
-                ),
-              ],
             ),
           ),
           Center(
@@ -2486,7 +2980,12 @@ class _MainScreenState extends State<MainScreen> {
       return _lineInfoChapter12;
     }
 
-    return _lineInfoStrongDic;
+    tmpIndex -= _chapter12PageCounter;
+    if (tmpIndex < _strongDicPageCounter) {
+      return _lineInfoEnded;
+    }
+
+    return _lineInfoEnded;
   }
 
   int getPageIndexCounter(int index) {
@@ -2556,138 +3055,11 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     tmpIndex -= _chapter12PageCounter;
+    if (tmpIndex < _strongDicPageCounter) {
+      return tmpIndex;
+    }
+
+    tmpIndex -= _strongDicPageCounter;
     return tmpIndex;
   }
-
-// Widget getText(String text) {
-  //   int _maxLines = 10;
-  //
-  //   return LayoutBuilder(
-  //     builder: (context, size) {
-  //       // print('size $size');
-  //
-  //       String text1 = text.substring(0, text.indexOf("<r>"));
-  //       String text2 =
-  //           text.substring(text.indexOf("<r>") + 3, text.indexOf("</r>"));
-  //       String text3 = text.substring(text.lastIndexOf("</r>") + 4);
-  //       String pureText = text.replaceAll("<r>", "").replaceAll("</r>", "");
-  //
-  //       // print(text1);
-  //       // print(text2);
-  //       // print(text3);
-  //
-  //       List<TextSpan> texts = [
-  //         TextSpan(
-  //           text: text1,
-  //           style: TextStyle(
-  //             fontSize: 30,
-  //             color: Colors.black,
-  //           ),
-  //         ),
-  //         TextSpan(
-  //           text: text2,
-  //           style: TextStyle(
-  //             fontSize: 30,
-  //             color: Colors.red,
-  //           ),
-  //         ),
-  //         TextSpan(
-  //           text: text3,
-  //           style: TextStyle(
-  //             fontSize: 30,
-  //             color: Colors.black,
-  //           ),
-  //         ),
-  //       ];
-  //
-  //       final span = TextSpan(
-  //         text: pureText,
-  //         style: TextStyle(
-  //           fontSize: 30,
-  //           color: Colors.black,
-  //         ),
-  //       );
-  //
-  //       final tp = TextPainter(
-  //         text: span,
-  //         maxLines: _maxLines,
-  //         textDirection: TextDirection.ltr,
-  //         textAlign: TextAlign.justify,
-  //       );
-  //       tp.layout(maxWidth: size.maxWidth);
-  //
-  //       // print(tp.height);
-  //       // print(tp.width);
-  //       // print(tp.inlinePlaceholderBoxes);
-  //       // print(tp.inlinePlaceholderScales);
-  //       //print(tp.computeLineMetrics());
-  //       // print(tp.maxIntrinsicWidth);
-  //       // print(tp.minIntrinsicWidth);
-  //       // print(tp.preferredLineHeight);
-  //       // print(tp.size);
-  //
-  //       for (int i = 0; i <= pureText.length;) {
-  //         TextRange tr = tp.getLineBoundary(TextPosition(offset: i));
-  //         // print(pureText.substring(tr.start, tr.end));
-  //         i = tr.end + 1;
-  //       }
-  //
-  //       if (tp.didExceedMaxLines) {
-  //         // The text has more than three lines.
-  //         // TODO: display the prompt message
-  //         //return Container(color: Colors.red);
-  //         return RichText(
-  //           textAlign: TextAlign.justify,
-  //           maxLines: _maxLines,
-  //           text: TextSpan(
-  //             text: text1,
-  //             style: TextStyle(
-  //               fontSize: 30,
-  //               color: Colors.black,
-  //             ),
-  //             children: <TextSpan>[
-  //               texts[1],
-  //               texts[2],
-  //             ],
-  //           ),
-  //         );
-  //
-  //         return Text(
-  //           text,
-  //           textAlign: TextAlign.justify,
-  //           maxLines: _maxLines,
-  //           style: TextStyle(
-  //             fontSize: 30,
-  //             color: Colors.black,
-  //           ),
-  //         );
-  //       } else {
-  //         return RichText(
-  //           textAlign: TextAlign.justify,
-  //           maxLines: _maxLines,
-  //           text: TextSpan(
-  //             text: text1,
-  //             style: TextStyle(
-  //               fontSize: 30,
-  //               color: Colors.black,
-  //             ),
-  //             children: <TextSpan>[
-  //               texts[1],
-  //               texts[2],
-  //             ],
-  //           ),
-  //         );
-  //
-  //         return Text(
-  //           text,
-  //           textAlign: TextAlign.justify,
-  //           style: TextStyle(
-  //             fontSize: 30,
-  //             color: Colors.black,
-  //           ),
-  //         );
-  //       }
-  //     },
-  //   );
-  // }
 }

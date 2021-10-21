@@ -78,8 +78,7 @@ class _DataInitState extends State<DataInit> {
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
 
-    if (_settings.getScreenWidth() == 0 ||
-        size.width != _settings.getScreenWidth()) {
+    if (_settings.getScreenWidth() == 0 || size.width != _settings.getScreenWidth()) {
       _settings.setScreenWidth(size.width);
       _settings.setScreenHeight(size.height);
 
@@ -103,6 +102,7 @@ class _DataInitState extends State<DataInit> {
 
     return SafeArea(
       child: Scaffold(
+        backgroundColor: Colors.transparent,
         body: SizedBox.expand(
           child: Stack(
             children: [
@@ -111,7 +111,7 @@ class _DataInitState extends State<DataInit> {
                   horizontal: _settings.getHorizontalSpace(),
                   vertical: _settings.getVerticalSpace(),
                 ),
-                color: Colors.white,
+                color: Colors.transparent,
                 child: Container(
                   color: Colors.transparent,
                   child: Row(
@@ -123,42 +123,24 @@ class _DataInitState extends State<DataInit> {
                         child: Container(
                           child: Stack(
                             children: [
-                              if (_settings.getMaxLines(FONT_SIZE_1) == 0)
-                                setMaxLines(FONT_SIZE_1),
-                              if (_settings.getMaxLines(FONT_SIZE_2) == 0)
-                                setMaxLines(FONT_SIZE_2),
-                              if (_settings.getMaxLines(FONT_SIZE_3) == 0)
-                                setMaxLines(FONT_SIZE_3),
-                              if (_settings.getMaxLines(FONT_SIZE_4) == 0)
-                                setMaxLines(FONT_SIZE_4),
-                              if (_settings.getMaxLines(FONT_SIZE_5) == 0)
-                                setMaxLines(FONT_SIZE_5),
-                              if (_settings.getMaxLines(FONT_SIZE_6) == 0)
-                                setMaxLines(FONT_SIZE_6),
-                              if (_settings.getLineInfo(1).length == 0)
-                                getPageLines(1, kChapter1All),
-                              if (_settings.getLineInfo(2).length == 0)
-                                getPageLines(2, kChapter2All),
-                              if (_settings.getLineInfo(3).length == 0)
-                                getPageLines(3, kChapter3All),
-                              if (_settings.getLineInfo(4).length == 0)
-                                getPageLines(4, kChapter4All),
-                              if (_settings.getLineInfo(5).length == 0)
-                                getPageLines(5, kChapter5All),
-                              if (_settings.getLineInfo(6).length == 0)
-                                getPageLines(6, kChapter6All),
-                              if (_settings.getLineInfo(7).length == 0)
-                                getPageLines(7, kChapter7All),
-                              if (_settings.getLineInfo(8).length == 0)
-                                getPageLines(8, kChapter8All),
-                              if (_settings.getLineInfo(9).length == 0)
-                                getPageLines(9, kChapter9All),
-                              if (_settings.getLineInfo(10).length == 0)
-                                getPageLines(10, kChapter10All),
-                              if (_settings.getLineInfo(11).length == 0)
-                                getPageLines(11, kChapter11All),
-                              if (_settings.getLineInfo(12).length == 0)
-                                getPageLines(12, kChapter12All),
+                              if (_settings.getMaxLines(FONT_SIZE_1) == 0) setMaxLines(FONT_SIZE_1),
+                              if (_settings.getMaxLines(FONT_SIZE_2) == 0) setMaxLines(FONT_SIZE_2),
+                              if (_settings.getMaxLines(FONT_SIZE_3) == 0) setMaxLines(FONT_SIZE_3),
+                              if (_settings.getMaxLines(FONT_SIZE_4) == 0) setMaxLines(FONT_SIZE_4),
+                              if (_settings.getMaxLines(FONT_SIZE_5) == 0) setMaxLines(FONT_SIZE_5),
+                              if (_settings.getMaxLines(FONT_SIZE_6) == 0) setMaxLines(FONT_SIZE_6),
+                              if (_settings.getLineInfo(1).length == 0) getPageLines(1, kChapter1All),
+                              if (_settings.getLineInfo(2).length == 0) getPageLines(2, kChapter2All),
+                              if (_settings.getLineInfo(3).length == 0) getPageLines(3, kChapter3All),
+                              if (_settings.getLineInfo(4).length == 0) getPageLines(4, kChapter4All),
+                              if (_settings.getLineInfo(5).length == 0) getPageLines(5, kChapter5All),
+                              if (_settings.getLineInfo(6).length == 0) getPageLines(6, kChapter6All),
+                              if (_settings.getLineInfo(7).length == 0) getPageLines(7, kChapter7All),
+                              if (_settings.getLineInfo(8).length == 0) getPageLines(8, kChapter8All),
+                              if (_settings.getLineInfo(9).length == 0) getPageLines(9, kChapter9All),
+                              if (_settings.getLineInfo(10).length == 0) getPageLines(10, kChapter10All),
+                              if (_settings.getLineInfo(11).length == 0) getPageLines(11, kChapter11All),
+                              if (_settings.getLineInfo(12).length == 0) getPageLines(12, kChapter12All),
                             ],
                           ),
                         ),
@@ -168,8 +150,7 @@ class _DataInitState extends State<DataInit> {
                 ),
               ),
               Container(
-                padding:
-                    EdgeInsets.symmetric(horizontal: HEADER_HORIZONTAL_SPACE),
+                padding: EdgeInsets.symmetric(horizontal: HEADER_HORIZONTAL_SPACE),
                 child: Column(
                   children: [
                     SizedBox(
@@ -179,20 +160,14 @@ class _DataInitState extends State<DataInit> {
                       child: Container(
                         child: Stack(
                           children: [
-                            if (_settings.getHeaderMaxLines(FONT_SIZE_1) == 0)
-                              setHeaderMaxLines(FONT_SIZE_1),
-                            if (_settings.getHeaderMaxLines(FONT_SIZE_2) == 0)
-                              setHeaderMaxLines(FONT_SIZE_2),
-                            if (_settings.getHeaderMaxLines(FONT_SIZE_3) == 0)
-                              setHeaderMaxLines(FONT_SIZE_3),
-                            if (_settings.getHeaderMaxLines(FONT_SIZE_4) == 0)
-                              setHeaderMaxLines(FONT_SIZE_4),
-                            if (_settings.getHeaderMaxLines(FONT_SIZE_5) == 0)
-                              setHeaderMaxLines(FONT_SIZE_5),
-                            if (_settings.getHeaderMaxLines(FONT_SIZE_6) == 0)
-                              setHeaderMaxLines(FONT_SIZE_6),
-                            if (_settings.getLineInfo(0).length == 0)
-                              getHeaderPageLines(),
+                            if (_settings.getHeaderMaxLines(FONT_SIZE_1) == 0) setHeaderMaxLines(FONT_SIZE_1),
+                            if (_settings.getHeaderMaxLines(FONT_SIZE_2) == 0) setHeaderMaxLines(FONT_SIZE_2),
+                            if (_settings.getHeaderMaxLines(FONT_SIZE_3) == 0) setHeaderMaxLines(FONT_SIZE_3),
+                            if (_settings.getHeaderMaxLines(FONT_SIZE_4) == 0) setHeaderMaxLines(FONT_SIZE_4),
+                            if (_settings.getHeaderMaxLines(FONT_SIZE_5) == 0) setHeaderMaxLines(FONT_SIZE_5),
+                            if (_settings.getHeaderMaxLines(FONT_SIZE_6) == 0) setHeaderMaxLines(FONT_SIZE_6),
+                            if (_settings.getLineInfo(0).length == 0) getHeaderPageLines(),
+                            if (_settings.getLineInfo(0).length == 0) getEndedPageLines(),
                           ],
                         ),
                       ),
@@ -203,10 +178,59 @@ class _DataInitState extends State<DataInit> {
                   ],
                 ),
               ),
+              Container(
+                padding: EdgeInsets.symmetric(
+                  vertical: STRONG_DIC_VERTICAL_SPACE,
+                  horizontal: STRONG_DIC_HORIZONTAL_SPACE,
+                ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        child: Stack(
+                          children: [
+                            if (_settings.getStrongDicScreenWidth() == 0) setStringDicSize(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget setStringDicSize() {
+    return LayoutBuilder(
+      builder: (context, size) {
+        final span = TextSpan(
+          text: kHeaderChapter,
+          style: _settings.getFontStyle(
+            color: Colors.transparent,
+          ),
+        );
+
+        final tp = TextPainter(
+          text: span,
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.justify,
+        );
+        tp.layout(maxWidth: size.maxWidth);
+
+        if (_settings.getStrongDicScreenWidth() == 0) {
+          _settings.setStrongDicScreenWidth(size.maxWidth);
+        }
+
+        if (_settings.getStrongDicScreenHeight() == 0) {
+          _settings.setStrongDicScreenHeight(size.maxHeight);
+        }
+
+        return Container();
+      },
     );
   }
 
@@ -244,11 +268,7 @@ class _DataInitState extends State<DataInit> {
           String subStr = kHeaderChapter.substring(tr.start, tr.end);
 
           // print(subStr);
-          lineInfoList.add(LineInfo(
-              chapter: 0,
-              index: index,
-              paragraph: paraIndex,
-              lineText: subStr));
+          lineInfoList.add(LineInfo(chapter: 0, index: index, paragraph: paraIndex, lineText: subStr));
 
           if (subStr.isEmpty) {
             paraIndex++;
@@ -258,6 +278,57 @@ class _DataInitState extends State<DataInit> {
           index++;
         }
         _settings.setLineInfo(0, lineInfoList);
+
+        return Container();
+      },
+    );
+  }
+
+  Widget getEndedPageLines() {
+    return LayoutBuilder(
+      builder: (context, size) {
+        final span = TextSpan(
+          text: kEndedChapter,
+          style: _settings.getFontStyle(
+            color: Colors.transparent,
+          ),
+        );
+
+        final tp = TextPainter(
+          text: span,
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.justify,
+        );
+        tp.layout(maxWidth: size.maxWidth);
+
+        if (_settings.getHeaderScreenWidth() == 0) {
+          _settings.setHeaderScreenWidth(size.maxWidth);
+        }
+
+        if (_settings.getHeaderScreenHeight() == 0) {
+          _settings.setHeaderScreenHeight(size.maxHeight);
+        }
+
+        int index = 0;
+        int paraIndex = 1;
+        List<LineInfo> lineInfoList = [];
+
+        for (int i = 0; i <= kEndedChapter.length;) {
+          TextRange tr = tp.getLineBoundary(TextPosition(offset: i));
+          String subStr = kEndedChapter.substring(tr.start, tr.end);
+
+          // print(subStr);
+
+          lineInfoList.add(LineInfo(chapter: 13, index: index, paragraph: paraIndex, lineText: subStr));
+
+          if (subStr.isEmpty) {
+            paraIndex++;
+          }
+
+          i = tr.end + 1;
+          index++;
+        }
+        _settings.setLineInfo(13, lineInfoList);
 
         return Container();
       },
@@ -298,11 +369,7 @@ class _DataInitState extends State<DataInit> {
           String subStr = chapterBody.substring(tr.start, tr.end);
 
           // print(subStr);
-          lineInfoList.add(LineInfo(
-              chapter: chapter,
-              index: index,
-              paragraph: paraIndex,
-              lineText: subStr));
+          lineInfoList.add(LineInfo(chapter: chapter, index: index, paragraph: paraIndex, lineText: subStr));
 
           if (subStr.isEmpty) {
             paraIndex++;
@@ -370,7 +437,7 @@ class _DataInitState extends State<DataInit> {
 
         // print('setMaxLines(fontName ${_settings.getFontName()} fontSize $fontSize, tp.height ${tp.height})');
 
-        int maxLines = (size.maxHeight / tp.height).floor();
+        int maxLines = (size.maxHeight / (tp.height + 0.5)).floor();
 
         _settings.setHeaderMaxLines(fontSize, maxLines);
         print('setHeaderMaxLines($fontSize, $maxLines)');

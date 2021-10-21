@@ -1,5 +1,7 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:matthew/models/line_info.dart';
+import 'package:matthew/models/strong_dic_data.dart';
 import 'package:matthew/utils/settings.dart';
 
 import '../constants/constants.dart';
@@ -164,31 +166,13 @@ class HeaderPage {
           lineStr = lineStr.replaceAll("\n", "");
         }
 
-        if (i == lineInfoList.length - 1) print(lineStr);
+        // if (i == lineInfoList.length - 1) print(lineStr);
 
         lines.add(
           Container(
             padding: EdgeInsets.symmetric(horizontal: HEADER_HORIZONTAL_SPACE),
             height: cellHeight,
-            child: RichText(
-              textAlign: (i != lineInfoList.length - 1) ? TextAlign.justify : TextAlign.start,
-              maxLines: 2,
-              text: TextSpan(
-                text: lineStr,
-                style: _settings.getFontStyle(
-                  color: Colors.black,
-                ),
-                children: <TextSpan>[
-                  if (i != lineInfoList.length - 1)
-                    TextSpan(
-                      text: lineInfoList[i + 1].lineText,
-                      style: _settings.getFontStyle(
-                        color: Colors.transparent,
-                      ),
-                    ),
-                ],
-              ),
-            ),
+            child: getHeaderRichText(i, lineInfoList, lineStr, _settings),
           ),
         );
       }
@@ -292,8 +276,8 @@ class HeaderPage {
       contents.add(buildContent(_settings, 10, pagesIndex[10], onClickPage, prevPage, nextPage));
       contents.add(buildContent(_settings, 11, pagesIndex[11], onClickPage, prevPage, nextPage));
       contents.add(buildContent(_settings, 12, pagesIndex[12], onClickPage, prevPage, nextPage));
-      contents.add(buildContent(_settings, 13, pagesIndex[12], onClickPage, prevPage, nextPage));
-      contents.add(buildContent(_settings, 14, pagesIndex[12], onClickPage, prevPage, nextPage));
+      contents.add(buildContent(_settings, 13, pagesIndex[13], onClickPage, prevPage, nextPage));
+      contents.add(buildContent(_settings, 14, pagesIndex[14], onClickPage, prevPage, nextPage));
 
       int indexOfChapter = index - 4 - headerPageCounter;
 
@@ -579,6 +563,139 @@ class HeaderPage {
     return SizedBox.expand(child: Container(color: Colors.red));
   }
 
+  Widget getHeaderRichText(int i, List<LineInfo> lineInfoList, String lineStr, Settings _settings) {
+    List<String> blueStrList = [
+      "[수천 번의 노력]",
+      "[ONE-STORY]",
+      "[50년]",
+      "[전무후무한 성경]",
+    ];
+
+    for (int j = 0; j < blueStrList.length; j++) {
+      if (lineStr.contains(blueStrList[j])) {
+        return Container(
+          padding: EdgeInsets.only(top: 2),
+          alignment: Alignment.bottomLeft,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Text(
+                blueStrList[j],
+                style: TextStyle(
+                  fontFamily: _settings.getFontName(),
+                  fontSize: _settings.getFontSize() + 1,
+                  color: Color(0xFF167EC7),
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.2,
+                ),
+              ),
+              Text(
+                lineStr.substring(blueStrList[j].length, lineStr.length),
+                style: TextStyle(
+                  fontFamily: _settings.getFontName(),
+                  fontSize: _settings.getFontSize(),
+                  color: Colors.black,
+                  // fontWeight: FontWeight.w400,
+                ),
+              ),
+            ],
+          ),
+        );
+      }
+    }
+
+    String blueStr = "KJV 및 개역개정의 수 만개의 오번역이 수정된 이 책은,";
+
+    if (i > lineInfoList.length - 6) {
+      if (blueStr.contains(lineStr)) {
+        return RichText(
+          textAlign: (i != lineInfoList.length - 1) ? TextAlign.justify : TextAlign.start,
+          maxLines: 2,
+          text: TextSpan(
+            text: lineStr,
+            style: TextStyle(
+              fontFamily: _settings.getFontName(),
+              fontSize: _settings.getFontSize() + 1,
+              color: Color(0xFF167EC7),
+              fontWeight: FontWeight.w600,
+            ),
+            children: <TextSpan>[
+              if (i != lineInfoList.length - 1)
+                TextSpan(
+                  text: lineInfoList[i + 1].lineText,
+                  style: _settings.getFontStyle(
+                    color: Colors.transparent,
+                  ),
+                ),
+            ],
+          ),
+        );
+      }
+    }
+
+    if (lineStr.contains("예수님의 작품")) {
+      return Container(
+        padding: EdgeInsets.only(top: 2),
+        alignment: Alignment.bottomLeft,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Text(
+              lineStr.substring(0, lineStr.indexOf("예수님의 작품")),
+              style: TextStyle(
+                fontFamily: _settings.getFontName(),
+                fontSize: _settings.getFontSize(),
+                color: Colors.black,
+                // fontWeight: FontWeight.w400,
+              ),
+            ),
+            Text(
+              lineStr.substring(lineStr.indexOf("예수님의 작품"), lineStr.indexOf("예수님의 작품") + "예수님의 작품".length),
+              style: TextStyle(
+                fontFamily: _settings.getFontName(),
+                fontSize: _settings.getFontSize() + 1,
+                color: FONT_RED_COLOR,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.2,
+              ),
+            ),
+            Text(
+              lineStr.substring(lineStr.indexOf("예수님의 작품") + "예수님의 작품".length, lineStr.length),
+              style: TextStyle(
+                fontFamily: _settings.getFontName(),
+                fontSize: _settings.getFontSize(),
+                color: Colors.black,
+                // fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return RichText(
+      textAlign: (i != lineInfoList.length - 1) ? TextAlign.justify : TextAlign.start,
+      maxLines: 2,
+      text: TextSpan(
+        text: lineStr,
+        style: _settings.getFontStyle(
+          color: Colors.black,
+        ),
+        children: <TextSpan>[
+          if (i != lineInfoList.length - 1)
+            TextSpan(
+              text: lineInfoList[i + 1].lineText,
+              style: _settings.getFontStyle(
+                color: Colors.transparent,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget buildContent(Settings _settings, int chapter, int pageNo, Function onClickPage, Function prevPage, Function nextPage) {
     return Expanded(
       child: Container(
@@ -756,6 +873,403 @@ class HeaderPage {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget getStrongDicPage(int index, int strongDicStartPage, bool isCopyMode, Function onCopyToClipboard) {
+    Settings _settings = Settings();
+
+    int indexOfChapter = index - strongDicStartPage;
+
+    //print('getStrongDicPage() indexOfChapter $indexOfChapter');
+
+    if (indexOfChapter == 0) {
+      return Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("assets/images/chapter_title_bg.png"),
+            fit: BoxFit.cover,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Image.asset(
+          'assets/images/strong_title.png',
+          height: 285,
+          fit: BoxFit.fitHeight,
+        ),
+      );
+    }
+
+    List<Widget> items = [];
+
+    int startIndex;
+    int endIndex;
+    int maxLines = (_settings.getStrongDicScreenHeight() / STRONG_DIC_ITEM_HEIGHT).floor();
+    // print('getStrongDicPage() maxLines $maxLines, kStrongDic.length ${kStrongDic.length}');
+    // print('getStrongDicPage() indexOfChapter $indexOfChapter');
+    bool displayBookMark = false;
+
+    if (indexOfChapter == 1) {
+      startIndex = 0;
+      endIndex = startIndex + maxLines - 1;
+
+      items.add(
+        Container(
+          height: STRONG_DIC_ITEM_HEIGHT - 15,
+          alignment: Alignment.center,
+          child: Row(
+            children: [
+              Container(
+                width: STRONG_DIC_COLUMN_WIDTH,
+                alignment: Alignment.center,
+                color: Color(0xFF7E858B),
+                child: Text(
+                  "스트롱코드",
+                  style: TextStyle(
+                    fontFamily: _settings.getFontName(),
+                    fontSize: 17,
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Container(
+                width: 1,
+                height: STRONG_DIC_ITEM_HEIGHT - 15,
+                color: Colors.white,
+              ),
+              Expanded(
+                child: Container(
+                  alignment: Alignment.center,
+                  color: Color(0xFF7E858B),
+                  child: Text(
+                    "뜻",
+                    style: TextStyle(
+                      fontFamily: _settings.getFontName(),
+                      fontSize: 17,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    } else {
+      items.add(
+        Container(height: 1, color: Colors.black),
+      );
+      startIndex = (maxLines * (indexOfChapter - 1)) - 1;
+      endIndex = startIndex + maxLines;
+    }
+
+    for (int i = startIndex; i < endIndex; i++) {
+      if (i > kStrongDic.length - 1) {
+        items.add(
+          SizedBox(
+            height: STRONG_DIC_ITEM_HEIGHT,
+          ),
+        );
+        continue;
+      }
+
+      if (!displayBookMark) {
+        if (_settings.isBookMarkPage(kStrongDic[i].code)) {
+          displayBookMark = true;
+        }
+      }
+
+      items.add(
+        Container(
+          height: STRONG_DIC_ITEM_HEIGHT,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border(
+              bottom: BorderSide(
+                color: Colors.black,
+                width: 1.0,
+              ),
+            ),
+          ),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  String copyText = kStrongDic[i].code + ":" + kStrongDic[i].mean;
+                  onCopyToClipboard(copyText);
+                },
+                child: Container(
+                  width: STRONG_DIC_COLUMN_WIDTH,
+                  alignment: Alignment.center,
+                  color: isCopyMode ? Color(0xFF167EC7) : Color(0xFFDFE4F2),
+                  child: AutoSizeText(
+                    kStrongDic[i].code,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: _settings.getFontName(),
+                      fontSize: 16,
+                      color: Colors.black,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              Container(
+                width: 1,
+                height: STRONG_DIC_ITEM_HEIGHT,
+                color: Colors.black,
+              ),
+              Expanded(
+                child: Container(
+                  alignment: Alignment.centerLeft,
+                  padding: EdgeInsets.only(left: 8),
+                  color: Color(0xFFFEF9E7),
+                  child: AutoSizeText(
+                    kStrongDic[i].mean,
+                    maxLines: 2,
+                    style: TextStyle(
+                      fontFamily: _settings.getFontName(),
+                      fontSize: 16,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Stack(
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(
+            vertical: STRONG_DIC_VERTICAL_SPACE,
+            horizontal: STRONG_DIC_HORIZONTAL_SPACE,
+          ),
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: items,
+          ),
+        ),
+        if (displayBookMark)
+          Positioned(
+            top: 8,
+            right: STRONG_DIC_HORIZONTAL_SPACE,
+            child: Image.asset(
+              "assets/images/bookmark.png",
+              height: 48,
+              fit: BoxFit.fitHeight,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget getEndedPage(int index, int endedStartPage, int totalPageCounter) {
+    Settings _settings = Settings();
+
+    int indexOfChapter = index - endedStartPage;
+    int maxLines = _settings.getHeaderMaxLines(_settings.getFontSize());
+    List<LineInfo> lineInfoList = _settings.getLineInfo(13);
+
+    int startIndex = indexOfChapter * maxLines;
+    int endIndex = startIndex + maxLines;
+    List<Widget> lines = [];
+    double cellHeight = _settings.getHeaderScreenHeight() / maxLines;
+
+    for (int i = startIndex; i < endIndex; i++) {
+      if (i >= lineInfoList.length) {
+        lines.add(
+          SizedBox(
+            height: _settings.getHeaderScreenHeight() / maxLines,
+          ),
+        );
+        continue;
+      }
+
+      if (lineInfoList[i].lineText.isEmpty) {
+        if (i == startIndex || i == endIndex - 1) {
+          continue;
+        }
+      }
+
+      String lineStr = lineInfoList[i].lineText;
+      if (lineStr.isNotEmpty) {
+        lineStr = lineStr.replaceAll("\n", "");
+      }
+
+      // if (i == lineInfoList.length - 1) print(lineStr);
+
+      lines.add(
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: HEADER_HORIZONTAL_SPACE),
+          height: cellHeight,
+          alignment: Alignment.bottomLeft,
+          child: getEndedRichText(i, lineInfoList, lineStr, _settings),
+        ),
+      );
+    }
+
+    return Container(
+      color: Color(0xFFF9F2E6),
+      child: Stack(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              if (indexOfChapter == 0)
+                Container(
+                  height: 170,
+                  alignment: Alignment.center,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/images/header_deco.png',
+                        height: 32,
+                        fit: BoxFit.fitHeight,
+                      ),
+                      SizedBox(
+                        height: 6,
+                      ),
+                      Container(
+                        height: 35,
+                        alignment: Alignment.center,
+                        child: Text(
+                          "마침말",
+                          style: _settings.getCustomFontStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF142A4D),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 160,
+                ),
+              Expanded(
+                child: Container(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: lines,
+                  ),
+                ),
+              ),
+              SizedBox(
+                height: 70,
+              ),
+            ],
+          ),
+          if (index == totalPageCounter - 1)
+            Column(
+              children: [
+                Expanded(
+                  child: Container(),
+                ),
+                Container(
+                  height: 120,
+                  alignment: Alignment.centerRight,
+                  padding: EdgeInsets.only(right: 36),
+                  child: Image.asset(
+                    'assets/images/ended_sign.png',
+                    height: 91,
+                    fit: BoxFit.fitHeight,
+                  ),
+                ),
+                SizedBox(
+                  height: 53,
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget getEndedRichText(int i, List<LineInfo> lineInfoList, String lineStr, Settings _settings) {
+    List<String> redStrList = [
+      "“아브라함의 아들이며, 다윗의 아들이신,",
+      "예수 그리스도의 낳으심의 성경책입니다.”가",
+      "새롭게 번역된 내용입니다.",
+      "결국,",
+      "완전한 1:1대응은,",
+      "완전한 번역으로의 완전성의 열매를 맺게 된 것입니다.",
+    ];
+
+    for (int j = 0; j < redStrList.length; j++) {
+      if (lineStr.isNotEmpty && redStrList[j].contains(lineStr)) {
+        if (lineStr.length < 10) {
+          String beforeLineStr = lineInfoList[i - 1].lineText;
+          // print(beforeLineStr);
+          if (beforeLineStr.isNotEmpty && !redStrList[j].contains(beforeLineStr)) {
+            break;
+          }
+        }
+
+        return RichText(
+          textAlign: (i != lineInfoList.length - 1) ? TextAlign.justify : TextAlign.start,
+          maxLines: 2,
+          text: TextSpan(
+            text: lineStr,
+            style: TextStyle(
+              fontFamily: _settings.getFontName(),
+              fontSize: _settings.getFontSize() + 1,
+              color: FONT_RED_COLOR,
+              fontWeight: FontWeight.w600,
+              height: 1.7,
+            ),
+            children: <TextSpan>[
+              if (i != lineInfoList.length - 1)
+                TextSpan(
+                  text: lineInfoList[i + 1].lineText,
+                  style: TextStyle(
+                    fontFamily: _settings.getFontName(),
+                    fontSize: _settings.getFontSize() + 1,
+                    color: Colors.transparent,
+                    fontWeight: FontWeight.w600,
+                    height: 1.0,
+                  ),
+                ),
+            ],
+          ),
+        );
+      }
+    }
+
+    return RichText(
+      textAlign: (i != lineInfoList.length - 1) ? TextAlign.justify : TextAlign.start,
+      maxLines: 2,
+      text: TextSpan(
+        text: lineStr,
+        style: _settings.getFontStyle(
+          color: Colors.black,
+        ),
+        children: <TextSpan>[
+          if (i != lineInfoList.length - 1)
+            TextSpan(
+              text: lineInfoList[i + 1].lineText,
+              style: _settings.getFontStyle(
+                color: Colors.transparent,
+              ),
+            ),
+        ],
       ),
     );
   }
