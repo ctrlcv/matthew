@@ -100,7 +100,7 @@ class _BookMarkScreenState extends State<BookMarkScreen> {
                             style: TextStyle(
                               fontFamily: _settings.getFontName(),
                               fontSize: 22,
-                              color: Colors.black,
+                              color: Colors.grey,
                               fontWeight: FontWeight.bold,
                             ),
                           ),

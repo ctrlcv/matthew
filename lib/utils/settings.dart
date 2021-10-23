@@ -13,7 +13,7 @@ class Settings {
   }
 
   Settings._internal() {
-    _fontName = Hive.box('matthew').get('setFontName') ?? FONT_GOWUN;
+    _fontName = Hive.box('matthew').get('setFontName') ?? FONT_GOWUND;
     _fontSize = Hive.box('matthew').get('setFontSize') ?? FONT_SIZE_3;
     _scrollVertical = Hive.box('matthew').get('setScrollVertical') ?? false;
     _bookMarks = Hive.box('matthew').get('setBookMark') ?? [];
@@ -21,7 +21,7 @@ class Settings {
   }
 
   static double _fontSize = FONT_SIZE_3;
-  static String _fontName = FONT_GOWUN;
+  static String _fontName = FONT_GOWUND;
   static bool _scrollVertical = false;
   static List<int> _bookMarks = [];
   static List<String> _bookMarkStrong = [];

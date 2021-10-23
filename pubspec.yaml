@@ -80,9 +80,13 @@ flutter:
   # list giving the asset and other descriptors for the font. For
   # example:
   fonts:
-    - family: gowun
+    - family: gowund
       fonts:
         - asset: assets/fonts/GowunDodum-Regular.ttf
+
+    - family: gowunb
+      fonts:
+        - asset: assets/fonts/GowunBatang-Regular.ttf
 
     - family: kyobo
       fonts:
@@ -96,13 +100,25 @@ flutter:
       fonts:
         - asset: assets/fonts/GmarketSansTTFMedium.ttf
 
-    - family: notosans
+    - family: ngothic
       fonts:
-        - asset: assets/fonts/NotoSansKR-Regular.otf
+        - asset: assets/fonts/NanumGothic.ttf
 
-    - family: notoserif
+    - family: nmyeong
       fonts:
-        - asset: assets/fonts/NotoSerifKR-Regular.otf
+        - asset: assets/fonts/NanumMyeongjo.ttf
+
+    - family: nsquare
+      fonts:
+        - asset: assets/fonts/NanumSquareR.ttf
+
+    - family: tway
+      fonts:
+        - asset: assets/fonts/tway_air.ttf
+
+    - family: cookie
+      fonts:
+        - asset: assets/fonts/CookieRun-Regular.ttf
 
   #       - asset: fonts/Schyler-Italic.ttf
   #         style: italic

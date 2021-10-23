@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:clipboard/clipboard.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hive/hive.dart';
 import 'package:matthew/dialog/font_set_dialog.dart';
@@ -13,10 +14,10 @@ import 'package:matthew/screen/pdf_screen.dart';
 import 'package:matthew/screen/search_screen.dart';
 import 'package:matthew/utils/settings.dart';
 
+import '../component/swipe_detector.dart';
 import '../constants/constants.dart';
 import '../models/line_info.dart';
 import '../models/matthew_data.dart';
-import '../swipe_detector.dart';
 import 'bookmark_screen.dart';
 import 'contents_screen.dart';
 import 'data_initialization.dart';
@@ -32,6 +33,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   Settings _settings = Settings();
   HeaderPage _headerPage = HeaderPage();
+  DateTime _currentBackPressTime = DateTime.now();
 
   List<List<LineInfo>> _lineInfoList = [];
 
@@ -80,6 +82,7 @@ class _MainScreenState extends State<MainScreen> {
 
   bool _showMenu = false;
   Timer _showMenuTimer = new Timer(Duration(milliseconds: 1000), () {});
+  Timer _reCalcScreenTimer = new Timer(Duration(milliseconds: 500), () {});
 
   bool _showScrollSetPanel = false;
   bool _setScrollVertical = false;
@@ -744,33 +747,106 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  Future<bool> _onBackPressed() {
+    if (_showMenu) {
+      _showMenu = false;
+      if (mounted) {
+        setState(() {});
+      }
+      return Future.value(null);
+    }
+
+    if (_showScrollSetPanel) {
+      _showScrollSetPanel = false;
+      if (mounted) {
+        setState(() {});
+      }
+      return Future.value(null);
+    }
+
+    if (_showFontSetPanel) {
+      _showFontSetPanel = false;
+      if (mounted) {
+        setState(() {});
+      }
+      return Future.value(null);
+    }
+
+    if (_isCopyMode) {
+      _isCopyMode = false;
+      if (mounted) {
+        setState(() {});
+      }
+      return Future.value(null);
+    }
+
+    DateTime nowTime = DateTime.now();
+    if (nowTime.difference(_currentBackPressTime) > Duration(seconds: 2)) {
+      _currentBackPressTime = nowTime;
+
+      Fluttertoast.showToast(
+          msg: "  종료하려면 다시 한번 이번 버튼을 누르세요  ",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.CENTER,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Color(0x99000000),
+          textColor: Colors.white,
+          fontSize: 14.0);
+
+      return Future.value(null);
+    }
+
+    SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+    return Future.value(null);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    double screenWidth = MediaQuery.of(context).size.width;
+    if (screenWidth != _settings.getScreenWidth()) {
+      print('didChangeDependencies() screenWidth $screenWidth, _settings.getScreenWidth() ${_settings.getScreenWidth()} ==> re calc Screen Size');
+      if (_reCalcScreenTimer.isActive) {
+        _reCalcScreenTimer.cancel();
+      }
+
+      _reCalcScreenTimer = new Timer(Duration(milliseconds: 200), () async {
+        await reCalcScreenSize();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: Stack(
-          children: [
-            PageView.builder(
-              controller: _pageController,
-              itemCount: _totalPageCounter,
-              onPageChanged: _onPageChange,
-              scrollDirection: _settings.getScrollVertical() ? Axis.vertical : Axis.horizontal,
-              itemBuilder: (BuildContext context, int index) {
-                return SizedBox.expand(
-                  child: getBodyText(index),
-                );
-              },
-            ),
-            if (!_isCopyMode) buildControlPanel(),
-            if (_isCopyMode) buildCopyModeTitle(),
-            if (_showFontSetPanel || _showScrollSetPanel)
-              Container(
-                color: Color(0x77000000),
+    return WillPopScope(
+      onWillPop: _onBackPressed,
+      child: SafeArea(
+        child: Scaffold(
+          backgroundColor: Colors.white,
+          body: Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                itemCount: _totalPageCounter,
+                onPageChanged: _onPageChange,
+                scrollDirection: _settings.getScrollVertical() ? Axis.vertical : Axis.horizontal,
+                itemBuilder: (BuildContext context, int index) {
+                  return SizedBox.expand(
+                    child: getBodyText(index),
+                  );
+                },
               ),
-            if (_showFontSetPanel) buildSetFontPanel(),
-            if (_showScrollSetPanel) buildSetScrollPanel(),
-          ],
+              if (!_isCopyMode) buildControlPanel(),
+              if (_isCopyMode) buildCopyModeTitle(),
+              if (_showFontSetPanel || _showScrollSetPanel)
+                Container(
+                  color: Color(0x77000000),
+                ),
+              if (_showFontSetPanel) buildSetFontPanel(),
+              if (_showScrollSetPanel) buildSetScrollPanel(),
+            ],
+          ),
         ),
       ),
     );
@@ -1059,32 +1135,48 @@ class _MainScreenState extends State<MainScreen> {
     int displayFontSize = 0;
 
     switch (_setFontName) {
-      case "notosans":
-        displayFontName = "본고딕";
+      case FONT_GODIC:
+        displayFontName = "나눔고딕";
         break;
 
-      case "notoserif":
-        displayFontName = "본명조";
+      case FONT_MYOUNGJO:
+        displayFontName = "나눔명조";
         break;
 
-      case "gmarket":
+      case FONT_NSQUARE:
+        displayFontName = "나눔스퀘어";
+        break;
+
+      case FONT_GMARKET:
         displayFontName = "지마켓산스";
         break;
 
-      case "nexon":
-        displayFontName = "넥슨Lv1고딕";
+      case FONT_NEXON:
+        displayFontName = "넥슨고딕";
         break;
 
-      case "gowun":
+      case FONT_TWAY:
+        displayFontName = "티웨이항공";
+        break;
+
+      case FONT_GOWUND:
         displayFontName = "고운돋움";
         break;
 
-      case "kyobo":
+      case FONT_GOWUNB:
+        displayFontName = "고운바탕";
+        break;
+
+      case FONT_KYOBO:
         displayFontName = "교보손글씨";
         break;
 
+      case FONT_COOKIE:
+        displayFontName = "쿠키런";
+        break;
+
       default:
-        displayFontName = "시스템폰트";
+        displayFontName = "폰트설정";
         break;
     }
 
@@ -1101,6 +1193,11 @@ class _MainScreenState extends State<MainScreen> {
     } else if (_setFontSize == FONT_SIZE_6) {
       displayFontSize = 6;
     }
+
+    double popUpWidth = _settings.getScreenWidth();
+    // if (popUpWidth > 400) {
+    //   popUpWidth = 400;
+    // }
 
     return Positioned(
       bottom: 30,
@@ -1188,30 +1285,6 @@ class _MainScreenState extends State<MainScreen> {
                                   color: Colors.black,
                                 ),
                               ),
-                              // TextSpan(
-                              //   text: "\n예수님께서 갈릴리 바닷가를 걸으시다가 바다로 그물을 던지는 두 형제 곧 베드로라 하는 시몬과 그의 형제 안드레를 보셨습니다. 그들이 어부였기에 그들에게 말씀하십니다. “",
-                              //   style: TextStyle(
-                              //     fontFamily: _setFontName,
-                              //     fontSize: _setFontSize,
-                              //     color: Colors.black,
-                              //   ),
-                              // ),
-                              // TextSpan(
-                              //   text: "나를 뒤쫓아 와라! 너희를 사람들의 어부들로 만들 것이다.",
-                              //   style: TextStyle(
-                              //     fontFamily: _setFontName,
-                              //     fontSize: _setFontSize,
-                              //     color: Colors.red,
-                              //   ),
-                              // ),
-                              // TextSpan(
-                              //   text: "”",
-                              //   style: TextStyle(
-                              //     fontFamily: _setFontName,
-                              //     fontSize: _setFontSize,
-                              //     color: Colors.black,
-                              //   ),
-                              // ),
                             ],
                           ),
                         ),
@@ -1228,9 +1301,11 @@ class _MainScreenState extends State<MainScreen> {
             Container(
               height: 6,
               color: Color(0xFF167EC7),
+              width: popUpWidth,
             ),
             Container(
               height: 132,
+              width: popUpWidth,
               color: Color(0xFFEDEDED),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1240,78 +1315,87 @@ class _MainScreenState extends State<MainScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        "글  꼴",
-                        style: TextStyle(
-                          fontFamily: _settings.getFontName(),
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF167EC7),
+                      Container(
+                        width: 80,
+                        alignment: Alignment.center,
+                        child: Text(
+                          "글  꼴",
+                          style: TextStyle(
+                            fontFamily: _settings.getFontName(),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF167EC7),
+                          ),
                         ),
                       ),
-                      SizedBox(width: 14),
-                      GestureDetector(
-                        onTap: () async {
-                          final resultStr = await showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return FontSetDialog();
-                            },
-                            barrierDismissible: false,
-                          );
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () async {
+                            final resultStr = await showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return FontSetDialog();
+                              },
+                              barrierDismissible: false,
+                            );
 
-                          print(resultStr);
-                          if (resultStr != null && resultStr.isNotEmpty) {
-                            _setFontName = resultStr;
-                          }
+                            print(resultStr);
+                            if (resultStr != null && resultStr.isNotEmpty) {
+                              _setFontName = resultStr;
+                            }
 
-                          if (mounted) {
-                            setState(() {});
-                          }
-                        },
-                        child: Container(
-                          width: 252,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
-                              color: Color(0xFF167EC7),
-                              width: 1.0,
+                            if (mounted) {
+                              setState(() {});
+                            }
+                          },
+                          child: Container(
+                            // width: 252,
+                            height: 30,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: Color(0xFF167EC7),
+                                width: 1.0,
+                              ),
                             ),
-                          ),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Container(
-                                  padding: EdgeInsets.only(
-                                    left: 8,
-                                  ),
-                                  child: Text(
-                                    displayFontName,
-                                    style: TextStyle(
-                                      fontFamily: _setFontName,
-                                      fontSize: 16,
-                                      color: Color(0xFF7B7979),
-                                      fontWeight: FontWeight.bold,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: EdgeInsets.only(
+                                      left: 8,
+                                    ),
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      displayFontName,
+                                      style: TextStyle(
+                                        fontFamily: _setFontName,
+                                        fontSize: 16,
+                                        color: Color(0xFF7B7979),
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              Container(
-                                alignment: Alignment.center,
-                                padding: EdgeInsets.only(
-                                  right: 8,
+                                Container(
+                                  alignment: Alignment.center,
+                                  padding: EdgeInsets.only(
+                                    right: 8,
+                                  ),
+                                  child: Icon(
+                                    Icons.expand_more_outlined,
+                                    size: 24,
+                                    color: Color(0xFF7B7979),
+                                  ),
                                 ),
-                                child: Icon(
-                                  Icons.expand_more_outlined,
-                                  size: 24,
-                                  color: Color(0xFF7B7979),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
+                      ),
+                      SizedBox(
+                        width: 15,
                       ),
                     ],
                   ),
@@ -1322,16 +1406,19 @@ class _MainScreenState extends State<MainScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        "크  기",
-                        style: TextStyle(
-                          fontFamily: _settings.getFontName(),
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF167EC7),
+                      Container(
+                        width: 80,
+                        alignment: Alignment.center,
+                        child: Text(
+                          "크  기",
+                          style: TextStyle(
+                            fontFamily: _settings.getFontName(),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF167EC7),
+                          ),
                         ),
                       ),
-                      SizedBox(width: 14),
                       Container(
                         width: 46,
                         height: 30,
@@ -1355,100 +1442,113 @@ class _MainScreenState extends State<MainScreen> {
                         ),
                       ),
                       SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () {
-                          displayFontSize--;
+                      Expanded(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  displayFontSize--;
 
-                          if (displayFontSize <= 0) {
-                            displayFontSize = 1;
-                          }
+                                  if (displayFontSize <= 0) {
+                                    displayFontSize = 1;
+                                  }
 
-                          if (displayFontSize == 1) {
-                            _setFontSize = FONT_SIZE_1;
-                          } else if (displayFontSize == 2) {
-                            _setFontSize = FONT_SIZE_2;
-                          } else if (displayFontSize == 3) {
-                            _setFontSize = FONT_SIZE_3;
-                          } else if (displayFontSize == 4) {
-                            _setFontSize = FONT_SIZE_4;
-                          } else if (displayFontSize == 5) {
-                            _setFontSize = FONT_SIZE_5;
-                          } else if (displayFontSize == 6) {
-                            _setFontSize = FONT_SIZE_6;
-                          }
+                                  if (displayFontSize == 1) {
+                                    _setFontSize = FONT_SIZE_1;
+                                  } else if (displayFontSize == 2) {
+                                    _setFontSize = FONT_SIZE_2;
+                                  } else if (displayFontSize == 3) {
+                                    _setFontSize = FONT_SIZE_3;
+                                  } else if (displayFontSize == 4) {
+                                    _setFontSize = FONT_SIZE_4;
+                                  } else if (displayFontSize == 5) {
+                                    _setFontSize = FONT_SIZE_5;
+                                  } else if (displayFontSize == 6) {
+                                    _setFontSize = FONT_SIZE_6;
+                                  }
 
-                          if (mounted) {
-                            setState(() {});
-                          }
-                        },
-                        child: Container(
-                          width: 97,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(6),
-                              bottomLeft: Radius.circular(6),
+                                  if (mounted) {
+                                    setState(() {});
+                                  }
+                                },
+                                child: Container(
+                                  width: 97,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(6),
+                                      bottomLeft: Radius.circular(6),
+                                    ),
+                                    border: Border.all(
+                                      color: Color(0xFF167EC7),
+                                      width: 1.0,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Image.asset(
+                                    'assets/images/minus.png',
+                                    height: 20,
+                                    fit: BoxFit.fitHeight,
+                                  ),
+                                ),
+                              ),
                             ),
-                            border: Border.all(
-                              color: Color(0xFF167EC7),
-                              width: 1.0,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: Image.asset(
-                            'assets/images/minus.png',
-                            height: 20,
-                            fit: BoxFit.fitHeight,
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          displayFontSize++;
+                            Expanded(
+                              child: GestureDetector(
+                                onTap: () {
+                                  displayFontSize++;
 
-                          if (displayFontSize >= 6) {
-                            displayFontSize = 6;
-                          }
+                                  if (displayFontSize >= 6) {
+                                    displayFontSize = 6;
+                                  }
 
-                          if (displayFontSize == 1) {
-                            _setFontSize = FONT_SIZE_1;
-                          } else if (displayFontSize == 2) {
-                            _setFontSize = FONT_SIZE_2;
-                          } else if (displayFontSize == 3) {
-                            _setFontSize = FONT_SIZE_3;
-                          } else if (displayFontSize == 4) {
-                            _setFontSize = FONT_SIZE_4;
-                          } else if (displayFontSize == 5) {
-                            _setFontSize = FONT_SIZE_5;
-                          } else if (displayFontSize == 6) {
-                            _setFontSize = FONT_SIZE_6;
-                          }
+                                  if (displayFontSize == 1) {
+                                    _setFontSize = FONT_SIZE_1;
+                                  } else if (displayFontSize == 2) {
+                                    _setFontSize = FONT_SIZE_2;
+                                  } else if (displayFontSize == 3) {
+                                    _setFontSize = FONT_SIZE_3;
+                                  } else if (displayFontSize == 4) {
+                                    _setFontSize = FONT_SIZE_4;
+                                  } else if (displayFontSize == 5) {
+                                    _setFontSize = FONT_SIZE_5;
+                                  } else if (displayFontSize == 6) {
+                                    _setFontSize = FONT_SIZE_6;
+                                  }
 
-                          if (mounted) {
-                            setState(() {});
-                          }
-                        },
-                        child: Container(
-                          width: 97,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: Color(0xFF167EC7),
-                            borderRadius: BorderRadius.only(
-                              topRight: Radius.circular(6),
-                              bottomRight: Radius.circular(6),
+                                  if (mounted) {
+                                    setState(() {});
+                                  }
+                                },
+                                child: Container(
+                                  width: 97,
+                                  height: 30,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFF167EC7),
+                                    borderRadius: BorderRadius.only(
+                                      topRight: Radius.circular(6),
+                                      bottomRight: Radius.circular(6),
+                                    ),
+                                    border: Border.all(
+                                      color: Color(0xFF167EC7),
+                                      width: 1.0,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Image.asset(
+                                    'assets/images/plus.png',
+                                    height: 20,
+                                    fit: BoxFit.fitHeight,
+                                  ),
+                                ),
+                              ),
                             ),
-                            border: Border.all(
-                              color: Color(0xFF167EC7),
-                              width: 1.0,
+                            SizedBox(
+                              width: 15,
                             ),
-                          ),
-                          alignment: Alignment.center,
-                          child: Image.asset(
-                            'assets/images/plus.png',
-                            height: 20,
-                            fit: BoxFit.fitHeight,
-                          ),
+                          ],
                         ),
                       ),
                     ],
@@ -1456,92 +1556,111 @@ class _MainScreenState extends State<MainScreen> {
                 ],
               ),
             ),
-            Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    color: Color(0xFFD0D0D0),
-                    height: 6,
+            Container(
+              width: popUpWidth,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      color: Color(0xFFD0D0D0),
+                      height: 6,
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Container(
-                    color: Color(0xFF65CCFF),
-                    height: 6,
+                  Expanded(
+                    child: Container(
+                      color: Color(0xFF65CCFF),
+                      height: 6,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () {
-                      _showFontSetPanel = false;
+            Container(
+              width: popUpWidth,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () {
+                        _showFontSetPanel = false;
 
-                      _setFontSize = _settings.getFontSize();
-                      _setFontName = _settings.getFontName();
+                        _setFontSize = _settings.getFontSize();
+                        _setFontName = _settings.getFontName();
 
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    },
-                    child: Container(
-                      color: Color(0xFF7B7979),
-                      height: 44,
-                      alignment: Alignment.center,
-                      child: Text(
-                        "취소",
-                        style: TextStyle(fontFamily: _settings.getFontName(), fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
+                        if (mounted) {
+                          setState(() {});
+                        }
+                      },
+                      child: Container(
+                        color: Color(0xFF7B7979),
+                        height: 44,
+                        alignment: Alignment.center,
+                        child: Text(
+                          "취소",
+                          style: TextStyle(fontFamily: _settings.getFontName(), fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () async {
-                      _showFontSetPanel = false;
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () async {
+                        _showFontSetPanel = false;
 
-                      _settings.setFontSize(_setFontSize);
-                      _settings.setFontName(_setFontName);
+                        if (mounted) {
+                          setState(() {});
+                        }
+                        _onPageChange(_currentPageNo);
 
-                      _settings.initPageInfo();
-                      await Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => DataInit(removeThisWidget: true)),
-                      );
+                        _settings.setFontSize(_setFontSize);
+                        _settings.setFontName(_setFontName);
 
-                      calculatorPageInfo();
+                        _settings.initPageInfo();
 
-                      int currentParagraph = Hive.box("matthew").get("currentParagraph") ?? -1;
-                      String currentStrongCode = Hive.box("matthew").get("currentStrongCode") ?? "";
+                        await Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => DataInit(removeThisWidget: true)),
+                        );
 
-                      if (currentParagraph != -1) {
-                        jumpToPageByParagraph(currentParagraph);
-                      } else if (currentStrongCode.isNotEmpty) {
-                        jumpToPageByStrongCode(currentStrongCode);
-                      } else {
-                        print("INVALID STATUS, currentParagraph $currentParagraph, currentStrongCode $currentStrongCode");
-                        _pageController.jumpToPage(0);
-                        _currentPageNo = 0;
-                      }
+                        calculatorPageInfo();
 
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    },
-                    child: Container(
-                      color: Color(0xFF167EC7),
-                      height: 44,
-                      alignment: Alignment.center,
-                      child: Text(
-                        "확인",
-                        style: TextStyle(fontFamily: _settings.getFontName(), fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
+                        if (mounted) {
+                          setState(() {});
+                        }
+
+                        int currentParagraph = Hive.box("matthew").get("currentParagraph") ?? -1;
+                        String currentStrongCode = Hive.box("matthew").get("currentStrongCode") ?? "";
+
+                        print('setFont() currentParagraph $currentParagraph, currentStrongCode $currentStrongCode');
+
+                        if (currentStrongCode.isNotEmpty) {
+                          jumpToPageByStrongCode(currentStrongCode);
+                        } else if (currentParagraph != -1) {
+                          jumpToPageByParagraph(currentParagraph);
+                        } else {
+                          print("setFont() INVALID STATUS, currentParagraph $currentParagraph, currentStrongCode $currentStrongCode");
+                          _pageController.jumpToPage(0);
+                          _currentPageNo = 0;
+                        }
+                      },
+                      child: Container(
+                        color: Color(0xFF167EC7),
+                        height: 44,
+                        alignment: Alignment.center,
+                        child: Text(
+                          "확인",
+                          style: TextStyle(
+                            fontFamily: _settings.getFontName(),
+                            fontSize: 22,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
@@ -1742,7 +1861,12 @@ class _MainScreenState extends State<MainScreen> {
                       alignment: Alignment.center,
                       child: Text(
                         "확인",
-                        style: TextStyle(fontFamily: _settings.getFontName(), fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontFamily: _settings.getFontName(),
+                          fontSize: 22,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -2102,6 +2226,10 @@ class _MainScreenState extends State<MainScreen> {
         if (i == 0 || lineInfoList[i].paragraph != lineInfoList[i - 1].paragraph) {
           _firstParagraph = kStartParagraph[chapterIndex - 1] + lineInfoList[i].paragraph - 1;
         }
+
+        if (_firstParagraph == -1) {
+          _firstParagraph = kStartParagraph[chapterIndex - 1] + lineInfoList[startIndex].paragraph - 1;
+        }
       }
 
       _lastParagraph = kStartParagraph[chapterIndex - 1] + lineInfoList[i].paragraph - 1;
@@ -2198,10 +2326,12 @@ class _MainScreenState extends State<MainScreen> {
             horizontal: _settings.getHorizontalSpace(),
             vertical: _settings.getVerticalSpace(),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: lines,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: lines,
+            ),
           ),
         ),
         if (displayBookMark)
@@ -2676,6 +2806,9 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Container buildChapterInnerTitle(double cellHeight, int maxLines, int offset, int chapterIndex) {
+    double titleHeight = cellHeight * (maxLines - offset);
+    double imagePosY = (titleHeight - 157.3) / 2;
+
     return Container(
       height: cellHeight * (maxLines - offset),
       width: _settings.getScreenWidth(),
@@ -2692,11 +2825,11 @@ class _MainScreenState extends State<MainScreen> {
             child: Column(
               children: [
                 SizedBox(
-                  height: 64,
+                  height: imagePosY + 40,
                 ),
                 Container(
                   alignment: Alignment.bottomCenter,
-                  padding: EdgeInsets.only(left: 3),
+                  padding: EdgeInsets.only(left: 7),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -2706,8 +2839,8 @@ class _MainScreenState extends State<MainScreen> {
                           chapterIndex.toString(),
                           textAlign: TextAlign.end,
                           style: TextStyle(
-                            fontFamily: 'notoserif',
-                            fontSize: 42,
+                            fontFamily: 'nmyeong',
+                            fontSize: 41,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF142A4D),
                           ),
@@ -2718,7 +2851,7 @@ class _MainScreenState extends State<MainScreen> {
                         child: Text(
                           "장",
                           style: TextStyle(
-                            fontFamily: 'notoserif',
+                            fontFamily: 'nmyeong',
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF142A4D),
@@ -3061,5 +3194,40 @@ class _MainScreenState extends State<MainScreen> {
 
     tmpIndex -= _strongDicPageCounter;
     return tmpIndex;
+  }
+
+  Future<void> reCalcScreenSize() async {
+    // if (mounted) {
+    //   setState(() {});
+    // }
+
+    _onPageChange(_currentPageNo);
+    _settings.initPageInfo();
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => DataInit(removeThisWidget: true)),
+    );
+
+    calculatorPageInfo();
+
+    if (mounted) {
+      setState(() {});
+    }
+
+    int currentParagraph = Hive.box("matthew").get("currentParagraph") ?? -1;
+    String currentStrongCode = Hive.box("matthew").get("currentStrongCode") ?? "";
+
+    print('LifecycleEvent.active currentParagraph $currentParagraph, currentStrongCode $currentStrongCode');
+
+    if (currentStrongCode.isNotEmpty) {
+      jumpToPageByStrongCode(currentStrongCode);
+    } else if (currentParagraph != -1) {
+      jumpToPageByParagraph(currentParagraph);
+    } else {
+      print("LifecycleEvent.active INVALID STATUS, currentParagraph $currentParagraph, currentStrongCode $currentStrongCode");
+      _pageController.jumpToPage(0);
+      _currentPageNo = 0;
+    }
   }
 }

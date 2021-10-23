@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:matthew/constants/constants.dart';
 import 'package:matthew/utils/settings.dart';
 
 class FontSetDialog extends StatefulWidget {
@@ -52,116 +53,189 @@ class _FontSetDialogState extends State<FontSetDialog> {
                 ),
               ),
             ),
-            // GestureDetector(
-            //   onTap: () {
-            //     Navigator.pop(context, "");
-            //   },
-            //   child: Container(
-            //     height: 45,
-            //     color: Colors.white,
-            //     alignment: Alignment.center,
-            //     child: Text(
-            //       "시스템폰트",
-            //       style: TextStyle(
-            //         fontSize: 22,
-            //         color: Color(0xFF7B7979),
-            //       ),
-            //     ),
-            //   ),
-            // ),
             GestureDetector(
               onTap: () {
-                Navigator.pop(context, "notosans");
-              },
-              child: Container(
-                height: 45,
-                color: Color(0xFFEDEDED),
-                alignment: Alignment.center,
-                child: Image.asset(
-                  "assets/images/font_godic.png",
-                  height: 32,
-                  fit: BoxFit.fitHeight,
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: () {
-                Navigator.pop(context, "notoserif");
+                Navigator.pop(context, FONT_GODIC);
               },
               child: Container(
                 height: 45,
                 color: Colors.white,
                 alignment: Alignment.center,
-                child: Image.asset(
-                  "assets/images/font_myoungjo.png",
-                  height: 32,
-                  fit: BoxFit.fitHeight,
+                child: Text(
+                  "나눔고딕",
+                  style: TextStyle(
+                    fontFamily: FONT_GODIC,
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),
             GestureDetector(
               onTap: () {
-                Navigator.pop(context, "gmarket");
+                Navigator.pop(context, FONT_MYOUNGJO);
               },
               child: Container(
                 height: 45,
                 color: Color(0xFFEDEDED),
                 alignment: Alignment.center,
-                child: Image.asset(
-                  "assets/images/font_gmarket.png",
-                  height: 24,
-                  fit: BoxFit.fitHeight,
+                child: Text(
+                  "나눔명조",
+                  style: TextStyle(
+                    fontFamily: FONT_MYOUNGJO,
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),
             GestureDetector(
               onTap: () {
-                Navigator.pop(context, "nexon");
+                Navigator.pop(context, FONT_NSQUARE);
               },
               child: Container(
                 height: 45,
                 color: Colors.white,
                 alignment: Alignment.center,
-                child: Image.asset(
-                  "assets/images/font_nexon.png",
-                  height: 26,
-                  fit: BoxFit.fitHeight,
+                child: Text(
+                  "나눔스퀘어",
+                  style: TextStyle(
+                    fontFamily: FONT_NSQUARE,
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),
             GestureDetector(
               onTap: () {
-                Navigator.pop(context, "gowun");
+                Navigator.pop(context, FONT_GMARKET);
               },
               child: Container(
                 height: 45,
                 color: Color(0xFFEDEDED),
                 alignment: Alignment.center,
-                child: Image.asset(
-                  "assets/images/font_gowun.png",
-                  height: 32,
-                  fit: BoxFit.fitHeight,
+                child: Text(
+                  "지마켓산스",
+                  style: TextStyle(
+                    fontFamily: FONT_GMARKET,
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),
             GestureDetector(
               onTap: () {
-                Navigator.pop(context, "kyobo");
+                Navigator.pop(context, FONT_NEXON);
+              },
+              child: Container(
+                height: 45,
+                color: Colors.white,
+                alignment: Alignment.center,
+                child: Text(
+                  "넥슨 Lv.1 고딕",
+                  style: TextStyle(
+                    fontFamily: FONT_NEXON,
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context, FONT_GOWUND);
+              },
+              child: Container(
+                height: 45,
+                color: Color(0xFFEDEDED),
+                alignment: Alignment.center,
+                child: Text(
+                  "고운돋움",
+                  style: TextStyle(
+                    fontFamily: FONT_GOWUND,
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context, FONT_GOWUNB);
+              },
+              child: Container(
+                height: 45,
+                color: Colors.white,
+                alignment: Alignment.center,
+                child: Text(
+                  "고운바탕",
+                  style: TextStyle(
+                    fontFamily: FONT_GOWUNB,
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context, FONT_TWAY);
+              },
+              child: Container(
+                height: 45,
+                color: Color(0xFFEDEDED),
+                alignment: Alignment.center,
+                child: Text(
+                  "티웨이항공",
+                  style: TextStyle(
+                    fontFamily: FONT_TWAY,
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context, FONT_COOKIE);
+              },
+              child: Container(
+                height: 45,
+                color: Colors.white,
+                alignment: Alignment.center,
+                child: Text(
+                  "쿠키런",
+                  style: TextStyle(
+                    fontFamily: FONT_COOKIE,
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(context, FONT_KYOBO);
               },
               child: Container(
                 height: 45,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: Color(0xFFEDEDED),
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(6),
                     bottomRight: Radius.circular(6),
                   ),
                 ),
                 alignment: Alignment.center,
-                child: Image.asset(
-                  "assets/images/font_kyobo.png",
-                  height: 32,
-                  fit: BoxFit.fitHeight,
+                child: Text(
+                  "교보손글씨",
+                  style: TextStyle(
+                    fontFamily: FONT_KYOBO,
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),

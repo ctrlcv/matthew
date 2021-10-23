@@ -13,12 +13,16 @@ const double HEADER_HORIZONTAL_SPACE = 30;
 const double STRONG_DIC_VERTICAL_SPACE = 60;
 const double STRONG_DIC_HORIZONTAL_SPACE = 30;
 
-const String FONT_GODIC = "notosans"; // 본고딕
-const String FONT_MYOUNGJO = "notoserif"; // 본명조
+const String FONT_GODIC = "ngothic"; // 나눔고딕
+const String FONT_MYOUNGJO = "nmyeong"; // 나눔명조
+const String FONT_NSQUARE = "nsquare"; // 나눔스퀘어
 const String FONT_GMARKET = "gmarket"; // 지마켓산스
 const String FONT_NEXON = "nexon"; // 넥슨고딕
-const String FONT_GOWUN = "gowun"; // 고운돋움
+const String FONT_TWAY = "tway"; // 티웨이항공
+const String FONT_GOWUND = "gowund"; // 고운돋움
+const String FONT_GOWUNB = "gowunb"; // 고운바탕
 const String FONT_KYOBO = "kyobo"; // 교보손글씨
+const String FONT_COOKIE = "cookie"; // 쿠키런
 
 const double LABEL_WIDTH = 50.0;
 const Color FONT_RED_COLOR = Color(0xFFE51D52);

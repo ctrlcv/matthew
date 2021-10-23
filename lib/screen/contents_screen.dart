@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:matthew/constants/constants.dart';
 import 'package:matthew/utils/settings.dart';
@@ -14,41 +15,10 @@ class ContentsScreen extends StatefulWidget {
 
 class _ContentsScreenState extends State<ContentsScreen> {
   Settings _settings = Settings();
-  List<Widget> _contents = [];
-  double _contentsWidth = 410;
 
   @override
   void initState() {
     super.initState();
-
-    _contents.clear();
-    _contents.add(SizedBox(
-      height: 30,
-    ));
-    _contents.add(buildContent(0, 4));
-    _contents.add(buildContent(1, widget.pagesIndex[1]));
-    _contents.add(buildContent(2, widget.pagesIndex[2]));
-    _contents.add(buildContent(3, widget.pagesIndex[3]));
-    _contents.add(buildContent(4, widget.pagesIndex[4]));
-    _contents.add(buildContent(5, widget.pagesIndex[5]));
-    _contents.add(buildContent(6, widget.pagesIndex[6]));
-    _contents.add(buildContent(7, widget.pagesIndex[7]));
-    _contents.add(buildContent(8, widget.pagesIndex[8]));
-    _contents.add(buildContent(9, widget.pagesIndex[9]));
-    _contents.add(buildContent(10, widget.pagesIndex[10]));
-    _contents.add(buildContent(11, widget.pagesIndex[11]));
-    _contents.add(buildContent(12, widget.pagesIndex[12]));
-    _contents.add(buildContent(13, widget.pagesIndex[13]));
-    _contents.add(buildContent(14, widget.pagesIndex[14]));
-    _contents.add(SizedBox(
-      height: 30,
-    ));
-
-    if (_settings.getScreenWidth() > 420) {
-      _contentsWidth = 420;
-    } else {
-      _contentsWidth = _settings.getScreenWidth();
-    }
   }
 
   @override
@@ -108,21 +78,14 @@ class _ContentsScreenState extends State<ContentsScreen> {
                 ),
               ),
               Expanded(
-                child: SingleChildScrollView(
-                  child: Row(
-                    children: [
-                      Expanded(child: Container()),
-                      Container(
-                        height: (100 * _contents.length).toDouble(),
-                        width: _contentsWidth,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: _contents,
-                        ),
-                      ),
-                      Expanded(child: Container()),
-                    ],
+                child: Container(
+                  alignment: Alignment.center,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 30),
+                    itemCount: 15,
+                    itemBuilder: (BuildContext context, int index) {
+                      return buildContent(context, index, (index == 0) ? 4 : widget.pagesIndex[index]);
+                    },
                   ),
                 ),
               ),
@@ -133,10 +96,17 @@ class _ContentsScreenState extends State<ContentsScreen> {
     );
   }
 
-  Widget buildContent(int chapter, int pageNo) {
+  Widget buildContent(BuildContext context, int chapter, int pageNo) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double contentWidth = 280;
+    double horizontalSpace = (screenWidth - contentWidth) / 2;
+
+    print('screenWidth $screenWidth, horizontalSpace $horizontalSpace');
+
     return Container(
       height: 100,
-      padding: EdgeInsets.symmetric(horizontal: 52),
+      width: contentWidth,
+      padding: EdgeInsets.symmetric(horizontal: horizontalSpace),
       alignment: Alignment.topCenter,
       child: Row(
         children: [
@@ -248,9 +218,14 @@ class _ContentsScreenState extends State<ContentsScreen> {
                               Navigator.pop(context);
                               widget.onClickPage(pageNo);
                             },
-                            child: Text(
+                            child: AutoSizeText(
                               "(${kChapterParagraphs[chapter - 1]})${kChapterSubPara[chapter - 1]}",
-                              style: TextStyle(fontFamily: _settings.getFontName(), fontSize: 12, color: Colors.black),
+                              maxLines: 1,
+                              style: TextStyle(
+                                fontFamily: _settings.getFontName(),
+                                fontSize: 12,
+                                color: Colors.black,
+                              ),
                             ),
                           ),
                   ),

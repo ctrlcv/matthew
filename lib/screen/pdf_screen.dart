@@ -19,25 +19,11 @@ class PdfScreen extends StatefulWidget {
 
 class _PdfScreenState extends State<PdfScreen> {
   Settings _settings = Settings();
-  List<Widget> _contents = [];
+  List<bool> _selected = [true, true, true, true, true, true, true, true, true, true, true, true];
 
   @override
   void initState() {
     super.initState();
-
-    _contents.clear();
-    _contents.add(buildContent(1));
-    _contents.add(buildContent(2));
-    _contents.add(buildContent(3));
-    _contents.add(buildContent(4));
-    _contents.add(buildContent(5));
-    _contents.add(buildContent(6));
-    _contents.add(buildContent(7));
-    _contents.add(buildContent(8));
-    _contents.add(buildContent(9));
-    _contents.add(buildContent(10));
-    _contents.add(buildContent(11));
-    _contents.add(buildContent(12));
   }
 
   @override
@@ -100,48 +86,67 @@ class _PdfScreenState extends State<PdfScreen> {
                   padding: EdgeInsets.symmetric(vertical: 31, horizontal: 36),
                   child: Column(
                     children: [
-                      Container(
-                        height: 75,
-                        color: Color(0xFF142A4D),
-                        child: Row(
-                          children: [
-                            Container(
-                              height: 75,
-                              width: 60,
-                              alignment: Alignment.center,
-                              child: Image.asset(
-                                'assets/images/checkbox_white_unselected.png',
-                                height: 24,
-                                fit: BoxFit.fitHeight,
-                              ),
-                            ),
-                            Container(
-                              height: 75,
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                "전체선택",
-                                style: TextStyle(
-                                  fontFamily: _settings.getFontName(),
-                                  fontSize: 20,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w400,
+                      GestureDetector(
+                        onTap: () {
+                          if (isAllSelected()) {
+                            for (int i = 0; i < _selected.length; i++) {
+                              _selected[i] = false;
+                            }
+
+                            if (mounted) {
+                              setState(() {});
+                            }
+                            return;
+                          }
+
+                          for (int i = 0; i < _selected.length; i++) {
+                            _selected[i] = true;
+                          }
+
+                          if (mounted) {
+                            setState(() {});
+                          }
+                        },
+                        child: Container(
+                          height: 75,
+                          color: Color(0xFF142A4D),
+                          child: Row(
+                            children: [
+                              Container(
+                                height: 75,
+                                width: 60,
+                                alignment: Alignment.center,
+                                child: Image.asset(
+                                  isAllSelected() ? 'assets/images/checkbox_white_selected.png' : 'assets/images/checkbox_white_unselected.png',
+                                  height: 24,
+                                  fit: BoxFit.fitHeight,
                                 ),
                               ),
-                            ),
-                          ],
+                              Container(
+                                height: 75,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  "전체선택",
+                                  style: TextStyle(
+                                    fontFamily: _settings.getFontName(),
+                                    fontSize: 20,
+                                    color: isAllSelected() ? Color(0xFF65CCFF) : Colors.white,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       Expanded(
                         child: Container(
-                          child: SingleChildScrollView(
-                            child: Container(
-                              height: (75 * _contents.length).toDouble(),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: _contents,
-                              ),
-                            ),
+                          child: ListView.builder(
+                            padding: const EdgeInsets.all(0),
+                            itemCount: 12,
+                            itemBuilder: (BuildContext context, int index) {
+                              return buildContent(index + 1);
+                            },
                           ),
                         ),
                       ),
@@ -177,82 +182,109 @@ class _PdfScreenState extends State<PdfScreen> {
     );
   }
 
+  bool isAllSelected() {
+    for (int i = 0; i < _selected.length; i++) {
+      if (_selected[i] == false) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool isAllUnSelected() {
+    for (int i = 0; i < _selected.length; i++) {
+      if (_selected[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   Widget buildContent(int chapter) {
-    return Container(
-      height: 75,
-      alignment: Alignment.centerLeft,
-      decoration: BoxDecoration(
-        color: (chapter % 2 == 1) ? Color(0xFFEDEDED) : Colors.white,
-        border: Border(
-          left: BorderSide(
-            color: Color(0xFFEDEDED),
-            width: 1.0,
-          ),
-          right: BorderSide(
-            color: Color(0xFFEDEDED),
-            width: 1.0,
-          ),
-          bottom: BorderSide(
-            color: (chapter == 12) ? Color(0xFFEDEDED) : Colors.transparent,
-            width: 1.0,
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          Container(
-            height: 75,
-            width: 60,
-            alignment: Alignment.center,
-            child: Image.asset(
-              'assets/images/checkbox_unselected.png',
-              height: 24,
-              fit: BoxFit.fitHeight,
+    return GestureDetector(
+      onTap: () {
+        print('onTap() ${_selected[chapter - 1]}');
+        _selected[chapter - 1] = !_selected[chapter - 1];
+        if (mounted) {
+          setState(() {});
+        }
+      },
+      child: Container(
+        height: 75,
+        alignment: Alignment.centerLeft,
+        decoration: BoxDecoration(
+          color: (chapter % 2 == 1) ? Color(0xFFEDEDED) : Colors.white,
+          border: Border(
+            left: BorderSide(
+              color: Color(0xFFEDEDED),
+              width: 1.0,
+            ),
+            right: BorderSide(
+              color: Color(0xFFEDEDED),
+              width: 1.0,
+            ),
+            bottom: BorderSide(
+              color: (chapter == 12) ? Color(0xFFEDEDED) : Colors.transparent,
+              width: 1.0,
             ),
           ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  chapter.toString() + "장 (${kChapterParagraphs[chapter - 1]})",
-                  style: TextStyle(
-                    fontFamily: _settings.getFontName(),
-                    fontSize: 16,
-                    color: Color(0xFF142A4D),
-                    fontWeight: FontWeight.bold,
+        ),
+        child: Row(
+          children: [
+            Container(
+              height: 75,
+              width: 60,
+              alignment: Alignment.center,
+              child: Image.asset(
+                _selected[chapter - 1] ? 'assets/images/checkbox_selected.png' : 'assets/images/checkbox_unselected.png',
+                height: 24,
+                fit: BoxFit.fitHeight,
+              ),
+            ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    chapter.toString() + "장 (${kChapterParagraphs[chapter - 1]})",
+                    style: TextStyle(
+                      fontFamily: _settings.getFontName(),
+                      fontSize: 16,
+                      color: _selected[chapter - 1] ? Color(0xFF142A4D) : Color(0xFF7B7979),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: 4),
-              Container(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  "${kChapterSubPara[chapter - 1]}",
-                  style: TextStyle(
-                    fontFamily: _settings.getFontName(),
-                    fontSize: 12,
-                    color: Color(0xFF142A4D),
+                SizedBox(height: 4),
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    "${kChapterSubPara[chapter - 1]}",
+                    style: TextStyle(
+                      fontFamily: _settings.getFontName(),
+                      fontSize: 12,
+                      color: _selected[chapter - 1] ? Color(0xFF142A4D) : Color(0xFF7B7979),
+                    ),
                   ),
                 ),
-              ),
-              SizedBox(height: 4),
-              Container(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  kChapterTitle[chapter - 1],
-                  style: TextStyle(
-                    fontFamily: _settings.getFontName(),
-                    fontSize: 12,
-                    color: Color(0xFF7B7979),
+                SizedBox(height: 4),
+                Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    kChapterTitle[chapter - 1],
+                    style: TextStyle(
+                      fontFamily: _settings.getFontName(),
+                      fontSize: 12,
+                      color: Color(0xFF7B7979),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -261,25 +293,77 @@ class _PdfScreenState extends State<PdfScreen> {
     print('start _makePDFDocument()');
     final doc = pw.Document(pageMode: PdfPageMode.outlines);
 
+    String fontName = "";
+    double fontSize = 13;
+
+    switch (_settings.getFontName()) {
+      case FONT_GODIC:
+        fontName = "assets/fonts/NanumGothic.ttf";
+        break;
+
+      case FONT_MYOUNGJO:
+        fontName = "assets/fonts/NanumMyeongjo.ttf";
+        break;
+
+      case FONT_NSQUARE:
+        fontName = "assets/fonts/NanumSquareR.ttf";
+        break;
+
+      case FONT_GMARKET:
+        fontName = "assets/fonts/GmarketSansTTFMedium.ttf";
+        break;
+
+      case FONT_NEXON:
+        fontName = "assets/fonts/nexon_regular.ttf";
+        break;
+
+      case FONT_TWAY:
+        fontName = "assets/fonts/tway_air.ttf";
+        break;
+
+      case FONT_GOWUND:
+        fontName = "assets/fonts/GowunDodum-Regular.ttf";
+        break;
+
+      case FONT_GOWUNB:
+        fontName = "assets/fonts/GowunBatang-Regular.ttf";
+        break;
+
+      case FONT_KYOBO:
+        fontName = "assets/fonts/Kyobo-Handwriting.ttf";
+        break;
+
+      case FONT_COOKIE:
+        fontName = "assets/fonts/CookieRun-Regular.ttf";
+        break;
+    }
+
+    if (_settings.getFontSize() == FONT_SIZE_1) {
+      fontSize = 10;
+    } else if (_settings.getFontSize() == FONT_SIZE_2) {
+      fontSize = 12;
+    } else if (_settings.getFontSize() == FONT_SIZE_3) {
+      fontSize = 14;
+    } else if (_settings.getFontSize() == FONT_SIZE_4) {
+      fontSize = 16;
+    } else if (_settings.getFontSize() == FONT_SIZE_5) {
+      fontSize = 18;
+    } else if (_settings.getFontSize() == FONT_SIZE_6) {
+      fontSize = 20;
+    }
+
     final font1 = pw.Font.ttf(await rootBundle.load("assets/fonts/nexon_regular.ttf"));
-    final font2 = pw.Font.ttf(await rootBundle.load("assets/fonts/GowunDodum-Regular.ttf"));
+    final font2 = pw.Font.ttf(await rootBundle.load(fontName));
 
     final titleImage = pw.MemoryImage(
       (await rootBundle.load('assets/images/chapter_sub_title.png')).buffer.asUint8List(),
     );
 
-    doc.addPage(getMultiPages(1, font1, font2, titleImage));
-    doc.addPage(getMultiPages(2, font1, font2, titleImage));
-    doc.addPage(getMultiPages(3, font1, font2, titleImage));
-    doc.addPage(getMultiPages(4, font1, font2, titleImage));
-    doc.addPage(getMultiPages(5, font1, font2, titleImage));
-    doc.addPage(getMultiPages(6, font1, font2, titleImage));
-    doc.addPage(getMultiPages(7, font1, font2, titleImage));
-    doc.addPage(getMultiPages(8, font1, font2, titleImage));
-    doc.addPage(getMultiPages(9, font1, font2, titleImage));
-    doc.addPage(getMultiPages(10, font1, font2, titleImage));
-    doc.addPage(getMultiPages(11, font1, font2, titleImage));
-    doc.addPage(getMultiPages(12, font1, font2, titleImage));
+    for (int i = 0; i < _selected.length; i++) {
+      if (_selected[i]) {
+        doc.addPage(getMultiPages(i + 1, font1, font2, titleImage, fontSize));
+      }
+    }
 
     final appDocDir = await getApplicationDocumentsDirectory();
     final appDocPath = appDocDir.path;
@@ -291,7 +375,7 @@ class _PdfScreenState extends State<PdfScreen> {
     print('End _makePDFDocument()');
   }
 
-  pw.MultiPage getMultiPages(int chapter, pw.Font font1, pw.Font font2, pw.MemoryImage titleImage) {
+  pw.MultiPage getMultiPages(int chapter, pw.Font font1, pw.Font font2, pw.MemoryImage titleImage, double fontSize) {
     List<String> chapters = kChapters[chapter - 1].split("\n\n");
     List<pw.Widget> chapterWidgets = [];
 
@@ -352,6 +436,7 @@ class _PdfScreenState extends State<PdfScreen> {
           hasRed: (redTexts.length == 0) ? false : true,
           paragraphNo: i + kStartParagraph[chapter - 1],
           redTexts: redTexts,
+          fontSize: fontSize,
         ),
       );
     }
@@ -421,16 +506,21 @@ class MatthewParagraph extends pw.Paragraph {
     this.hasRed = false,
     required this.redTexts,
     this.paragraphNo = 0,
+    this.fontSize = 13,
   }) : super(text: text, textAlign: textAlign, style: style, margin: margin, padding: padding);
 
   final bool hasRed;
   final List<String> redTexts;
   final int paragraphNo;
+  final double fontSize;
 
   @override
   pw.Widget build(pw.Context context) {
-    const double TEXT_FONT_SIZE = 13;
-    const double PARAGRAPH_FONT_SIZE = 12;
+    double paragraphFontSize = fontSize - 1;
+
+    if (fontSize > 18) {
+      paragraphFontSize = 18;
+    }
 
     if (!hasRed) {
       return pw.Container(
@@ -455,14 +545,14 @@ class MatthewParagraph extends pw.Paragraph {
                   textAlign: pw.TextAlign.center,
                   style: pw.TextStyle(
                     fontWeight: pw.FontWeight.bold,
-                    fontSize: PARAGRAPH_FONT_SIZE,
+                    fontSize: paragraphFontSize,
                     color: PdfColor.fromInt(0xFF01AA4E),
                   ),
                 ),
               ],
             ),
             pw.SizedBox(
-              width: 8,
+              width: 10,
             ),
             pw.Container(
               width: 390,
@@ -470,7 +560,7 @@ class MatthewParagraph extends pw.Paragraph {
                 text!,
                 textAlign: pw.TextAlign.justify,
                 style: pw.TextStyle(
-                  fontSize: TEXT_FONT_SIZE,
+                  fontSize: fontSize,
                   height: 1.8,
                   color: PdfColor.fromInt(0xFF000000),
                 ),
@@ -505,14 +595,14 @@ class MatthewParagraph extends pw.Paragraph {
                   textAlign: pw.TextAlign.center,
                   style: pw.TextStyle(
                     fontWeight: pw.FontWeight.bold,
-                    fontSize: PARAGRAPH_FONT_SIZE,
+                    fontSize: paragraphFontSize,
                     color: PdfColor.fromInt(0xFF01AA4E),
                   ),
                 ),
               ],
             ),
             pw.SizedBox(
-              width: 8,
+              width: 10,
             ),
             pw.Container(
               width: 390,
@@ -520,7 +610,7 @@ class MatthewParagraph extends pw.Paragraph {
                 text!,
                 textAlign: pw.TextAlign.justify,
                 style: pw.TextStyle(
-                  fontSize: TEXT_FONT_SIZE,
+                  fontSize: fontSize,
                   height: 1.8,
                   color: PdfColor.fromInt(0xFFE51D52),
                 ),
@@ -543,7 +633,7 @@ class MatthewParagraph extends pw.Paragraph {
           pw.TextSpan(
             text: restText.substring(0, index),
             style: pw.TextStyle(
-              fontSize: TEXT_FONT_SIZE,
+              fontSize: fontSize,
               height: 1.8,
               color: PdfColor.fromInt(0xFF000000),
             ),
@@ -557,7 +647,7 @@ class MatthewParagraph extends pw.Paragraph {
         pw.TextSpan(
           text: (restText.substring(0, redTexts[i].length)).trim(),
           style: pw.TextStyle(
-            fontSize: TEXT_FONT_SIZE,
+            fontSize: fontSize,
             height: 1.8,
             color: PdfColor.fromInt(0xFFE51D52),
           ),
@@ -571,7 +661,7 @@ class MatthewParagraph extends pw.Paragraph {
         pw.TextSpan(
           text: restText,
           style: pw.TextStyle(
-            fontSize: TEXT_FONT_SIZE,
+            fontSize: fontSize,
             height: 1.8,
             color: PdfColor.fromInt(0xFF000000),
           ),
@@ -601,14 +691,14 @@ class MatthewParagraph extends pw.Paragraph {
                 textAlign: pw.TextAlign.center,
                 style: pw.TextStyle(
                   fontWeight: pw.FontWeight.bold,
-                  fontSize: PARAGRAPH_FONT_SIZE,
+                  fontSize: paragraphFontSize,
                   color: PdfColor.fromInt(0xFF01AA4E),
                 ),
               ),
             ],
           ),
           pw.SizedBox(
-            width: 8,
+            width: 10,
           ),
           pw.Container(
             width: 390,
@@ -617,7 +707,7 @@ class MatthewParagraph extends pw.Paragraph {
               overflow: pw.TextOverflow.span,
               text: pw.TextSpan(
                 style: pw.TextStyle(
-                  fontSize: TEXT_FONT_SIZE,
+                  fontSize: fontSize,
                   height: 1.8,
                   color: PdfColor.fromInt(0xFF000000),
                 ),
