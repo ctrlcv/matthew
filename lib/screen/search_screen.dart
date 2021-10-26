@@ -18,16 +18,23 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   Settings _settings = Settings();
   List<SearchResult> _searchResult = [];
 
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      _searchFocusNode.requestFocus();
+    });
   }
 
   @override
   void dispose() {
+    _searchController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -124,6 +131,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                     child: TextField(
                                       autocorrect: false,
                                       controller: _searchController,
+                                      focusNode: _searchFocusNode,
                                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                                       decoration: InputDecoration(
                                         border: InputBorder.none,
@@ -135,6 +143,10 @@ class _SearchScreenState extends State<SearchScreen> {
                                         hintStyle: TextStyle(color: Colors.grey),
                                       ),
                                       keyboardType: TextInputType.text,
+                                      onSubmitted: (value) {
+                                        print('onSubmitted $value');
+                                        onSearch();
+                                      },
                                     ),
                                   ),
                                 ),
@@ -176,7 +188,18 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               Expanded(
                 child: (_searchResult.length == 0)
-                    ? Container()
+                    ? Container(
+                        alignment: Alignment.center,
+                        child: Text(
+                          "검색된 항목이 없습니다",
+                          style: TextStyle(
+                            fontFamily: _settings.getFontName(),
+                            fontSize: 22,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      )
                     : ListView.builder(
                         padding: const EdgeInsets.symmetric(vertical: 24),
                         itemCount: _searchResult.length,
@@ -282,77 +305,58 @@ class _SearchScreenState extends State<SearchScreen> {
       );
     }
 
-    // String codeStr = sResult.paragraphStr;
-    // int codeIndexOf = codeStr.indexOf(_searchController.text);
-    //
-    // Widget codeWidget = RichText(
-    //   textAlign: TextAlign.justify,
-    //   overflow: TextOverflow.ellipsis,
-    //   maxLines: 3,
-    //   text: TextSpan(
-    //     text: codeStr.substring(0, codeIndexOf),
-    //     style: TextStyle(
-    //       fontFamily: _settings.getFontName(),
-    //       fontSize: 16,
-    //       color: Colors.black,
-    //     ),
-    //     children: <TextSpan>[
-    //       TextSpan(
-    //         text: _searchController.text,
-    //         style: TextStyle(
-    //           fontFamily: _settings.getFontName(),
-    //           fontSize: 16,
-    //           fontWeight: FontWeight.bold,
-    //           color: Colors.red,
-    //         ),
-    //       ),
-    //       TextSpan(
-    //         text: codeStr.substring(codeIndexOf + _searchController.text.length, codeStr.length),
-    //         style: TextStyle(
-    //           fontFamily: _settings.getFontName(),
-    //           fontSize: 16,
-    //           color: Colors.black,
-    //         ),
-    //       ),
-    //     ],
-    //   ),
-    // );
-
     String resultStr = sResult.paragraphStr;
     int indexOf = resultStr.indexOf(_searchController.text);
+    Widget textWidget;
 
-    Widget textWidget = RichText(
-      textAlign: TextAlign.justify,
-      overflow: TextOverflow.ellipsis,
-      maxLines: 3,
-      text: TextSpan(
-        text: resultStr.substring(0, indexOf),
-        style: TextStyle(
-          fontFamily: _settings.getFontName(),
-          fontSize: 16,
-          color: Colors.black,
+    if (indexOf == -1) {
+      textWidget = RichText(
+        textAlign: TextAlign.justify,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 3,
+        text: TextSpan(
+          text: resultStr,
+          style: TextStyle(
+            fontFamily: _settings.getFontName(),
+            fontSize: 16,
+            color: Colors.black,
+          ),
         ),
-        children: <TextSpan>[
-          TextSpan(
-            text: _searchController.text,
-            style: TextStyle(
-              fontFamily: _settings.getFontName(),
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Colors.red,
-            ),
+      );
+    } else {
+      textWidget = RichText(
+        textAlign: TextAlign.justify,
+        overflow: TextOverflow.ellipsis,
+        maxLines: 3,
+        text: TextSpan(
+          text: resultStr.substring(0, indexOf),
+          style: TextStyle(
+            fontFamily: _settings.getFontName(),
+            fontSize: 16,
+            color: Colors.black,
           ),
-          TextSpan(
-            text: resultStr.substring(indexOf + _searchController.text.length, resultStr.length),
-            style: TextStyle(
-              fontFamily: _settings.getFontName(),
-              fontSize: 16,
-              color: Colors.black,
+          children: <TextSpan>[
+            TextSpan(
+              text: _searchController.text,
+              style: TextStyle(
+                fontFamily: _settings.getFontName(),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.red,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
+            TextSpan(
+              text: resultStr.substring(indexOf + _searchController.text.length, resultStr.length),
+              style: TextStyle(
+                fontFamily: _settings.getFontName(),
+                fontSize: 16,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       height: 86,

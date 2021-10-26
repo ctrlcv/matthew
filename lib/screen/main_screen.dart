@@ -559,14 +559,20 @@ class _MainScreenState extends State<MainScreen> {
 
       if (i == 1) {
         startIndex = 0;
-        endIndex = startIndex + maxLines - 1;
+        endIndex = startIndex + maxLines - 2;
+        // print('[1]getPageNoByStrongDicCode startIndex $startIndex endIndex $endIndex');
       } else {
         startIndex = (maxLines * (i - 1)) - 1;
-        endIndex = startIndex + maxLines;
+        endIndex = startIndex + maxLines - 1;
+
+        // if (i == 2 || i == 3) {
+        //   print('[$i]getPageNoByStrongDicCode startIndex $startIndex endIndex $endIndex');
+        // }
       }
 
       if (startIndex <= indexOfDic && indexOfDic <= endIndex) {
-        return startPageIndex + i + 1;
+        // print('getPageNoByStrongDicCode ==> ${startPageIndex + i}');
+        return startPageIndex + i;
       }
     }
 
@@ -795,6 +801,10 @@ class _MainScreenState extends State<MainScreen> {
 
       return Future.value(null);
     }
+
+    Hive.box('matthew').put("currentPage", 0);
+    Hive.box('matthew').put("currentParagraph", -1);
+    Hive.box('matthew').put("currentStrongCode", "");
 
     SystemChannels.platform.invokeMethod('SystemNavigator.pop');
     return Future.value(null);
