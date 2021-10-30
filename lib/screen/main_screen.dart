@@ -194,7 +194,12 @@ class _MainScreenState extends State<MainScreen> {
       _totalHeaderCounter + _chapter1PageCounter + _chapter2PageCounter,
       _totalHeaderCounter + _chapter1PageCounter + _chapter2PageCounter + _chapter3PageCounter,
       _totalHeaderCounter + _chapter1PageCounter + _chapter2PageCounter + _chapter3PageCounter + _chapter4PageCounter,
-      _totalHeaderCounter + _chapter1PageCounter + _chapter2PageCounter + _chapter3PageCounter + _chapter4PageCounter + _chapter5PageCounter,
+      _totalHeaderCounter +
+          _chapter1PageCounter +
+          _chapter2PageCounter +
+          _chapter3PageCounter +
+          _chapter4PageCounter +
+          _chapter5PageCounter,
       _totalHeaderCounter +
           _chapter1PageCounter +
           _chapter2PageCounter +
@@ -816,7 +821,8 @@ class _MainScreenState extends State<MainScreen> {
 
     double screenWidth = MediaQuery.of(context).size.width;
     if (screenWidth != _settings.getScreenWidth()) {
-      print('didChangeDependencies() screenWidth $screenWidth, _settings.getScreenWidth() ${_settings.getScreenWidth()} ==> re calc Screen Size');
+      print(
+          'didChangeDependencies() screenWidth $screenWidth, _settings.getScreenWidth() ${_settings.getScreenWidth()} ==> re calc Screen Size');
       if (_reCalcScreenTimer.isActive) {
         _reCalcScreenTimer.cancel();
       }
@@ -839,6 +845,7 @@ class _MainScreenState extends State<MainScreen> {
               PageView.builder(
                 controller: _pageController,
                 itemCount: _totalPageCounter,
+                physics: _setScrollVertical ? null : NeverScrollableScrollPhysics(),
                 onPageChanged: _onPageChange,
                 scrollDirection: _settings.getScrollVertical() ? Axis.vertical : Axis.horizontal,
                 itemBuilder: (BuildContext context, int index) {
@@ -1607,7 +1614,11 @@ class _MainScreenState extends State<MainScreen> {
                         alignment: Alignment.center,
                         child: Text(
                           "취소",
-                          style: TextStyle(fontFamily: _settings.getFontName(), fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                              fontFamily: _settings.getFontName(),
+                              fontSize: 22,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -1648,7 +1659,8 @@ class _MainScreenState extends State<MainScreen> {
                         } else if (currentParagraph != -1) {
                           jumpToPageByParagraph(currentParagraph);
                         } else {
-                          print("setFont() INVALID STATUS, currentParagraph $currentParagraph, currentStrongCode $currentStrongCode");
+                          print(
+                              "setFont() INVALID STATUS, currentParagraph $currentParagraph, currentStrongCode $currentStrongCode");
                           _pageController.jumpToPage(0);
                           _currentPageNo = 0;
                         }
@@ -1729,7 +1741,9 @@ class _MainScreenState extends State<MainScreen> {
                                   height: 22,
                                   alignment: Alignment.center,
                                   child: Image.asset(
-                                    _setScrollVertical ? "assets/images/circle_unselected.png" : "assets/images/circle_selected.png",
+                                    _setScrollVertical
+                                        ? "assets/images/circle_unselected.png"
+                                        : "assets/images/circle_selected.png",
                                     height: 18,
                                     fit: BoxFit.fitHeight,
                                   ),
@@ -1786,7 +1800,9 @@ class _MainScreenState extends State<MainScreen> {
                                   height: 22,
                                   alignment: Alignment.center,
                                   child: Image.asset(
-                                    _setScrollVertical ? "assets/images/circle_selected.png" : "assets/images/circle_unselected.png",
+                                    _setScrollVertical
+                                        ? "assets/images/circle_selected.png"
+                                        : "assets/images/circle_unselected.png",
                                     height: 18,
                                     fit: BoxFit.fitHeight,
                                   ),
@@ -1850,7 +1866,11 @@ class _MainScreenState extends State<MainScreen> {
                       alignment: Alignment.center,
                       child: Text(
                         "취소",
-                        style: TextStyle(fontFamily: _settings.getFontName(), fontSize: 22, color: Colors.white, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontFamily: _settings.getFontName(),
+                            fontSize: 22,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -2392,7 +2412,8 @@ class _MainScreenState extends State<MainScreen> {
     int lineStartIndex = paraFormat.body.indexOf(lineInfoList[i].lineText);
 
     if (lineStr.length < 5 && i != 0) {
-      lineStartIndex = paraFormat.body.indexOf(lineInfoList[i - 1].lineText + lineInfoList[i].lineText) + lineInfoList[i - 1].lineText.length;
+      lineStartIndex = paraFormat.body.indexOf(lineInfoList[i - 1].lineText + lineInfoList[i].lineText) +
+          lineInfoList[i - 1].lineText.length;
     }
 
     int lineEndIndex = lineStartIndex + lineInfoList[i].lineText.length;
@@ -2409,7 +2430,8 @@ class _MainScreenState extends State<MainScreen> {
       if (paraFormats.length == 1) {
         return buildNormalText(lineInfoList, i, Colors.black);
       } else {
-        List<TextSpan> textSpans = buildTextSpans(paraFormats[1], lineStr, (i == 0) ? "" : lineInfoList[i - 1].lineText);
+        List<TextSpan> textSpans =
+            buildTextSpans(paraFormats[1], lineStr, (i == 0) ? "" : lineInfoList[i - 1].lineText);
 
         textSpans.add(
           TextSpan(
@@ -2547,8 +2569,8 @@ class _MainScreenState extends State<MainScreen> {
               ),
               children: <TextSpan>[
                 TextSpan(
-                  text:
-                      lineStr.substring(paraFormat.startIndex - lineStartIndex, (paraFormat.startIndex - lineStartIndex) + paraFormat.redStr.length),
+                  text: lineStr.substring(paraFormat.startIndex - lineStartIndex,
+                      (paraFormat.startIndex - lineStartIndex) + paraFormat.redStr.length),
                   style: _settings.getFontStyle(
                     color: FONT_RED_COLOR,
                   ),
@@ -2596,7 +2618,8 @@ class _MainScreenState extends State<MainScreen> {
           textSpans.insert(
               0,
               TextSpan(
-                text: lineStr.substring(paraFormat.startIndex - lineStartIndex, (paraFormat.startIndex - lineStartIndex) + paraFormat.redStr.length),
+                text: lineStr.substring(paraFormat.startIndex - lineStartIndex,
+                    (paraFormat.startIndex - lineStartIndex) + paraFormat.redStr.length),
                 style: _settings.getFontStyle(
                   color: FONT_RED_COLOR,
                 ),
@@ -2736,7 +2759,8 @@ class _MainScreenState extends State<MainScreen> {
 
         result.add(
           TextSpan(
-            text: lineText.substring(paraFormat.startIndex - lineStartIndex, (paraFormat.startIndex - lineStartIndex) + paraFormat.redStr.length),
+            text: lineText.substring(paraFormat.startIndex - lineStartIndex,
+                (paraFormat.startIndex - lineStartIndex) + paraFormat.redStr.length),
             style: _settings.getFontStyle(
               color: FONT_RED_COLOR,
             ),
@@ -3235,7 +3259,8 @@ class _MainScreenState extends State<MainScreen> {
     } else if (currentParagraph != -1) {
       jumpToPageByParagraph(currentParagraph);
     } else {
-      print("LifecycleEvent.active INVALID STATUS, currentParagraph $currentParagraph, currentStrongCode $currentStrongCode");
+      print(
+          "LifecycleEvent.active INVALID STATUS, currentParagraph $currentParagraph, currentStrongCode $currentStrongCode");
       _pageController.jumpToPage(0);
       _currentPageNo = 0;
     }
