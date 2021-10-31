@@ -845,7 +845,7 @@ class _MainScreenState extends State<MainScreen> {
               PageView.builder(
                 controller: _pageController,
                 itemCount: _totalPageCounter,
-                physics: _setScrollVertical ? null : NeverScrollableScrollPhysics(),
+                // physics: _setScrollVertical ? null : NeverScrollableScrollPhysics(),
                 onPageChanged: _onPageChange,
                 scrollDirection: _settings.getScrollVertical() ? Axis.vertical : Axis.horizontal,
                 itemBuilder: (BuildContext context, int index) {
@@ -854,7 +854,8 @@ class _MainScreenState extends State<MainScreen> {
                   );
                 },
               ),
-              if (!_isCopyMode) buildControlPanel(),
+              // if (!_isCopyMode) buildControlPanel(),
+              if (!_isCopyMode) buildControlPanelOnlySwipe(),
               if (_isCopyMode) buildCopyModeTitle(),
               if (_showFontSetPanel || _showScrollSetPanel)
                 Container(
@@ -909,6 +910,178 @@ class _MainScreenState extends State<MainScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget buildControlPanelOnlySwipe() {
+    if (_currentPageNo > 3 + _headerPageCounter && _currentPageNo < _totalHeaderCounter - 1) {
+      return Container();
+    }
+
+    return Column(
+      children: [
+        AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          height: _showMenu ? 70 : 0,
+          curve: Curves.fastOutSlowIn,
+          color: Color(0xFF167EC7),
+          child: getTopMenu(),
+        ),
+        Expanded(
+          child: SwipeDetector(
+            onSwipeRight: () {
+              if (_settings.getScrollVertical()) {
+                return;
+              }
+
+              _showMenu = false;
+
+              if (_showMenuTimer.isActive) {
+                _showMenuTimer.cancel();
+              }
+
+              if (mounted) {
+                setState(() {});
+              }
+
+              _pageController.previousPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            },
+            onSwipeDown: () {
+              if (!_settings.getScrollVertical()) {
+                return;
+              }
+
+              _showMenu = false;
+
+              if (_showMenuTimer.isActive) {
+                _showMenuTimer.cancel();
+              }
+
+              if (mounted) {
+                setState(() {});
+              }
+
+              _pageController.previousPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            },
+            onSwipeLeft: () {
+              if (_settings.getScrollVertical()) {
+                return;
+              }
+
+              _showMenu = false;
+
+              if (_showMenuTimer.isActive) {
+                _showMenuTimer.cancel();
+              }
+
+              if (mounted) {
+                setState(() {});
+              }
+
+              _pageController.nextPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            },
+            onSwipeUp: () {
+              if (!_settings.getScrollVertical()) {
+                return;
+              }
+
+              _showMenu = false;
+
+              if (_showMenuTimer.isActive) {
+                _showMenuTimer.cancel();
+              }
+
+              if (mounted) {
+                setState(() {});
+              }
+
+              _pageController.nextPage(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+              );
+            },
+            child: GestureDetector(
+              onLongPress: () {
+                print('onControl - onLongPress()');
+                _isCopyMode = true;
+
+                if (mounted) {
+                  setState(() {});
+                }
+              },
+              onTap: () {
+                print('onControl - onTap $_currentPageNo $_totalHeaderCounter');
+                if (_currentPageNo < _totalHeaderCounter) {
+                  return;
+                }
+
+                for (int i = 0; i < _pageIndex.length; i++) {
+                  if (_currentPageNo == _pageIndex[i]) {
+                    return;
+                  }
+                }
+
+                if (_showMenu) {
+                  _showMenu = false;
+                  if (mounted) {
+                    setState(() {});
+                  }
+
+                  if (_showMenuTimer.isActive) {
+                    _showMenuTimer.cancel();
+                  }
+                } else {
+                  _showMenu = true;
+                  if (mounted) {
+                    setState(() {});
+                  }
+
+                  if (_showMenuTimer.isActive) {
+                    _showMenuTimer.cancel();
+                  }
+
+                  _showMenuTimer = new Timer(Duration(milliseconds: 2200), () {
+                    _showMenu = false;
+                    if (mounted) {
+                      setState(() {});
+                    }
+                  });
+                }
+              },
+              child: Container(
+                color: Colors.transparent,
+              ),
+            ),
+          ),
+        ),
+        AnimatedContainer(
+          duration: Duration(milliseconds: 200),
+          height: _showMenu ? 70 : 0,
+          curve: Curves.fastOutSlowIn,
+          color: Color(0xFF167EC7),
+          alignment: Alignment.center,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              getBottomMenuItem("목차", 'icon_content', _onClickMenuContent),
+              getBottomMenuItem("북마크", 'icon_bookmark', _onClickMenuViewBookMark),
+              getBottomMenuItem("폰트", 'icon_fontset', _onClickMenuSetFont),
+              getBottomMenuItem("스크롤", 'icon_scroll', _onClickMenuSetScroll),
+              getBottomMenuItem("PDF", 'icon_pdf', _onClickMenuPdf),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -1066,21 +1239,32 @@ class _MainScreenState extends State<MainScreen> {
                           }
                         }
 
-                        _showMenu = true;
-                        if (mounted) {
-                          setState(() {});
-                        }
-
-                        if (_showMenuTimer.isActive) {
-                          _showMenuTimer.cancel();
-                        }
-
-                        _showMenuTimer = new Timer(Duration(milliseconds: 2200), () {
+                        if (_showMenu) {
                           _showMenu = false;
                           if (mounted) {
                             setState(() {});
                           }
-                        });
+
+                          if (_showMenuTimer.isActive) {
+                            _showMenuTimer.cancel();
+                          }
+                        } else {
+                          _showMenu = true;
+                          if (mounted) {
+                            setState(() {});
+                          }
+
+                          if (_showMenuTimer.isActive) {
+                            _showMenuTimer.cancel();
+                          }
+
+                          _showMenuTimer = new Timer(Duration(milliseconds: 2200), () {
+                            _showMenu = false;
+                            if (mounted) {
+                              setState(() {});
+                            }
+                          });
+                        }
                       },
                       child: Container(
                         color: Colors.transparent,
@@ -2164,6 +2348,8 @@ class _MainScreenState extends State<MainScreen> {
           setState(() {});
         }
       }, () {
+        return;
+
         if (_settings.getScrollVertical()) {
           return;
         }
@@ -2176,6 +2362,8 @@ class _MainScreenState extends State<MainScreen> {
           setState(() {});
         }
       }, () {
+        return;
+
         if (_settings.getScrollVertical()) {
           return;
         }
